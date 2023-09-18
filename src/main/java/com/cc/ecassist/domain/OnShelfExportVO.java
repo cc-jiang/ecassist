@@ -27,7 +27,7 @@ public class OnShelfExportVO {
      * 操作方式
      */
     @ExcelProperty("操作方式")
-    private String operationMethod;
+    private String operateMethod;
     /**
      * 产品类目
      */
@@ -52,7 +52,7 @@ public class OnShelfExportVO {
      * 无理由退货
      */
     @ExcelProperty("无理由退货")
-    private String noReasonForReturn;
+    private String noReasonReturn;
     /**
      * 型号
      */
@@ -67,7 +67,7 @@ public class OnShelfExportVO {
      * 商品毛重(公斤)
      */
     @ExcelProperty("商品毛重(公斤)")
-    private String grossWeightOfProduct;
+    private String grossWeight;
     /**
      * [包装]长(mm)
      */
@@ -112,7 +112,7 @@ public class OnShelfExportVO {
      * 安装方式
      */
     @ExcelProperty("安装方式")
-    private String installationMethod;
+    private String installMethod;
     /**
      * 图案
      */
@@ -142,7 +142,7 @@ public class OnShelfExportVO {
      * 颜色分类
      */
     @ExcelProperty("颜色分类")
-    private String colorClassification;
+    private String colorCategory;
     /**
      * 版本
      */
@@ -162,7 +162,7 @@ public class OnShelfExportVO {
      * SKU商品条形码
      */
     @ExcelProperty("SKU商品条形码")
-    private String skuProductBarcode;
+    private String skuBarcode;
     /**
      * SKU工艺
      */
@@ -187,7 +187,7 @@ public class OnShelfExportVO {
      * SKU热门机型
      */
     @ExcelProperty("SKU热门机型")
-    private String skuPopularModels;
+    private String skuHotModel;
     /**
      * SKU风格
      */
@@ -207,12 +207,12 @@ public class OnShelfExportVO {
      * SKU适用品牌
      */
     @ExcelProperty("SKU适用品牌")
-    private String skuApplicableBrands;
+    private String skuBrand;
     /**
      * 商家sku
      */
     @ExcelProperty("商家sku")
-    private String skuMerchant;
+    private String sku;
     /**
      * SKU图片
      */
@@ -227,7 +227,7 @@ public class OnShelfExportVO {
      * 商品主图路径
      */
     @ExcelProperty("商品主图路径")
-    private String productMainImagePath;
+    private String mainImagePath;
     /**
      * 主图图片
      */
@@ -237,7 +237,7 @@ public class OnShelfExportVO {
      * 主图透明图
      */
     @ExcelProperty("主图透明图")
-    private String mainImageTransparentImage;
+    private String transparentImage;
     /**
      * 主图视频
      */
@@ -247,12 +247,12 @@ public class OnShelfExportVO {
      * 电脑版商品详情
      */
     @ExcelProperty("电脑版商品详情")
-    private String computerVersionProductDetails;
+    private String pcProductDetail;
     /**
      * 店内分类
      */
     @ExcelProperty("店内分类")
-    private String inStoreClassification;
+    private String inStoreCategory;
     /**
      * 发货地
      */
@@ -272,32 +272,32 @@ public class OnShelfExportVO {
      * 包装清单
      */
     @ExcelProperty("包装清单")
-    private String packagingList;
+    private String packageList;
     /**
      * 售后服务
      */
     @ExcelProperty("售后服务")
-    private String afterSalesService;
+    private String afterSaleService;
     /**
      * 销售单位
      */
     @ExcelProperty("销售单位")
-    private String salesUnit;
+    private String saleUnit;
     /**
      * 支付方式限制
      */
     @ExcelProperty("支付方式限制")
-    private String paymentMethodRestrictions;
+    private String payMethodLimit;
     /**
      * 发票限制
      */
     @ExcelProperty("发票限制")
-    private String invoiceRestrictions;
+    private String invoiceLimit;
     /**
      * 特色服务标名称
      */
     @ExcelProperty("特色服务标名称")
-    private String specialColorServiceLabelName;
+    private String specialServiceLabel;
     /**
      * 操作状态
      */

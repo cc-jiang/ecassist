@@ -1,9 +1,5 @@
 package com.cc.ecassist.service;
 
-import com.cc.ecassist.domain.OnShelfExportVO;
-
-import java.util.List;
-
 /**
  * 上架
  *
@@ -13,8 +9,9 @@ import java.util.List;
 public interface OnShelfService {
 
     /**
-     * 获取导出数据
+     * 导出数据
+     *
      * @return
      */
-    List<OnShelfExportVO> getList(OnShelfExportVO template);
+    void exportExcel();
 }

@@ -1,1 +1,13 @@
-test
+适用品牌
+SKU颜色
+
+型号
+关键词
+品牌
+热门属性
+版本
+model
+keyword
+brand
+popularAttribute
+version
