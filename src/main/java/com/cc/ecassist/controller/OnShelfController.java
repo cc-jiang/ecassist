@@ -2,7 +2,7 @@ package com.cc.ecassist.controller;
 
 import com.cc.ecassist.service.OnShelfService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,9 +19,8 @@ public class OnShelfController {
     @Autowired
     private OnShelfService onShelfService;
 
-    @PostMapping("exportExcel")
+    @GetMapping("exportExcel")
     public String exportExcel() {
-        onShelfService.exportExcel();
-        return "success";
+        return onShelfService.exportExcel();
     }
 }

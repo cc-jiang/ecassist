@@ -13,5 +13,5 @@ public interface OnShelfService {
      *
      * @return
      */
-    void exportExcel();
+    String exportExcel();
 }
