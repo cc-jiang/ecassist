@@ -24,4 +24,14 @@ public class Constant {
 
     public static final String ATTRIBUTE_EXCEL_NAME = PATH + "属性.xlsx";
     public static final String COLOR_CATEGORY_EXCEL_NAME = PATH + "颜色分类.xlsx";
+
+    /**
+     * 图片路径
+     */
+    public static final String IMAGE_NAME = PATH + "image/";
+
+    /**
+     * 商品模板路径
+     */
+    public static final String GOODS_TEMPLATE_NAME = PATH + "goodsTemplate/";
 }

@@ -1,10 +1,9 @@
 package com.cc.ecassist;
 
 import com.cc.ecassist.constant.Constant;
+import com.cc.ecassist.utils.FileUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import java.io.File;
 
 /**
  * @author congcong.jiang
@@ -17,9 +16,6 @@ public class EcassistApplication {
     public static void main(String[] args) {
         SpringApplication.run(EcassistApplication.class, args);
 
-        File path = new File(Constant.PATH);
-        if (!path.exists()) {
-            path.mkdir();
-        }
+        FileUtils.createDir(Constant.PATH);
     }
 }

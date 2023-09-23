@@ -39,7 +39,7 @@ public class OnShelfServiceImpl implements OnShelfService {
         EasyExcel.write(exportName)
                 .sheet("上架内容")
                 .head(OnShelfExportVO.class)
-                .doWrite(() -> buildExportList(template, attributeList, colorCategoryList));
+                .doWrite(buildExportList(template, attributeList, colorCategoryList));
         return exportName;
     }
 
@@ -49,7 +49,7 @@ public class OnShelfServiceImpl implements OnShelfService {
         attributeList.forEach(attribute -> {
             template.setProductTitle(buildTitle(template, attribute));
             template.setModel(attribute.getModel());
-            template.setProductNumber(template.getProductNumber() + attribute.getModel());
+            template.setProductName(template.getProductName() + attribute.getModel());
             template.setVersion(attribute.getVersion());
             template.setSkuHotModel(attribute.getHotAttribute());
             template.setSkuBrand(attribute.getBrand());

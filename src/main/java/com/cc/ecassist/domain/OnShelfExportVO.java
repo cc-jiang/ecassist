@@ -87,7 +87,7 @@ public class OnShelfExportVO {
      * 货号
      */
     @ExcelProperty("货号")
-    private String productNumber;
+    private String productName;
     /**
      * 产地
      */

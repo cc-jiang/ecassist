@@ -15,7 +15,29 @@ import java.util.Scanner;
  * @author congcong.jiang
  * @date 2022/11/16 10:42
  */
-public class FileUtils {
+public class FileUtils extends org.apache.commons.io.FileUtils {
+
+    /**
+     * 删除文件夹
+     * @param path
+     */
+    public static void deleteDir(String path) {
+        File file = new File(path);
+        try {
+            deleteDirectory(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 新建文件夹
+     * @param path
+     */
+    public static void createDir(String path) {
+        File file = new File(path);
+        file.mkdirs();
+    }
 
     public static void createAndWriteFile(String path, String content) throws IOException {
         createAndWriteFile(path, content, false);
