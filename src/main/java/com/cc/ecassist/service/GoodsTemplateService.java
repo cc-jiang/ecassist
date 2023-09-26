@@ -1,5 +1,12 @@
 package com.cc.ecassist.service;
 
+import com.alibaba.fastjson2.JSONObject;
+import com.cc.ecassist.domain.KeywordVO;
+import com.cc.ecassist.domain.ModelVO;
+import com.cc.ecassist.domain.ProductVO;
+
+import java.util.List;
+
 /**
  * 商品模板
  *
@@ -8,5 +15,13 @@ package com.cc.ecassist.service;
  */
 public interface GoodsTemplateService {
 
-    void genGoodsTemplateFiles();
+    void genGoodsTemplateFiles(List<ProductVO> productList);
+
+    List<ModelVO> getModelList();
+
+    List<KeywordVO> getKeywordList();
+
+    JSONObject getModelData();
+
+    JSONObject getKeywordData();
 }

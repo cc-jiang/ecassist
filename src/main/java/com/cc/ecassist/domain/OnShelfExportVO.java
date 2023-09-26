@@ -4,6 +4,8 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 /**
  * 上架文件
  *
@@ -12,7 +14,10 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class OnShelfExportVO {
+public class OnShelfExportVO implements Serializable {
+
+    private static final long serialVersionUID = -4089905339577710489L;
+
     /**
      * 序号
      */

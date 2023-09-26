@@ -26,12 +26,17 @@ public class Constant {
     public static final String COLOR_CATEGORY_EXCEL_NAME = PATH + "颜色分类.xlsx";
 
     /**
-     * 图片路径
-     */
-    public static final String IMAGE_NAME = PATH + "image/";
-
-    /**
      * 商品模板路径
      */
-    public static final String GOODS_TEMPLATE_NAME = PATH + "goodsTemplate/";
+    public static final String GOODS_TEMPLATE_PATH = PATH + "goodsTemplate/";
+
+    /**
+     * 型号编码excel
+     */
+    public static final String MODEL_EXCEL_NAME = PATH + "型号编码.xlsx";
+
+    /**
+     * 标题关键词excel
+     */
+    public static final String KEYWORD_EXCEL_NAME = PATH + "标题关键词.xlsx";
 }

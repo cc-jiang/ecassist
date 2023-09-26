@@ -5,6 +5,7 @@ import com.alibaba.excel.annotation.format.DateTimeFormat;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -14,7 +15,10 @@ import java.util.Date;
  */
 @Getter
 @Setter
-public class ExportVO {
+public class ExportVO implements Serializable {
+
+    private static final long serialVersionUID = -5872296856289685461L;
+
     @ExcelProperty("名称")
     private String name;
 

@@ -4,6 +4,8 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 /**
  * 属性
  *
@@ -12,7 +14,9 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class Attribute {
+public class Attribute implements Serializable {
+
+    private static final long serialVersionUID = -3133408068728940273L;
 
     /**
      * 型号

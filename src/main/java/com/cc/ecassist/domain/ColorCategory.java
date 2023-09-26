@@ -4,6 +4,8 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 /**
  * 颜色分类
  *
@@ -12,7 +14,9 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class ColorCategory {
+public class ColorCategory implements Serializable {
+
+    private static final long serialVersionUID = -473429242481990791L;
 
     /**
      * 颜色分类
