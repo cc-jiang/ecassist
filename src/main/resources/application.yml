@@ -32,6 +32,8 @@ spring:
     restart:
       # 热部署开关
       enabled: true
+  thymeleaf:
+    cache: false
 
 # MyBatis配置
 #mybatis:

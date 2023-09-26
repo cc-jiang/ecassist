@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <!--引入 element-ui 的样式，-->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入vue -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <!-- 引入http-vue-loader -->
+    <script src="https://unpkg.com/http-vue-loader"></script>
+    <!-- 引入element 的组件库-->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.1/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <meta charset="UTF-8">
+    <title>title</title>
+</head>
+<body>
+
+<div id="app">
+    <el-select v-model="model" placeholder="请选择">
+        <el-option
+                v-for="item in modelList"
+                :key="item.code"
+                :label="item.version"
+                :value="item.code">
+            <span style="float: left">{{ item.version }}</span>
+            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.code }}</span>
+        </el-option>
+    </el-select>
+
+</div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            model: '',
+            modelList: []
+        },
+        created() {
+            axios.get('/goodsTemplate/getModelList').then(res => {
+                this.modelList = res.data.data;
+                console.log(this.modelList);
+            });
+        },
+        methods: {
+
+        }
+    });
+</script>
+</html>
