@@ -16,7 +16,7 @@ import java.util.List;
  */
 public interface GoodsTemplateService {
 
-    void genGoodsTemplateFiles(List<ProductVO> productList);
+    String genGoodsTemplateFiles(List<ProductVO> productList);
 
     List<ModelVO> getModelList();
 

@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     @Override
-    public void genGoodsTemplateFiles(List<ProductVO> productList) {
+    public String genGoodsTemplateFiles(List<ProductVO> productList) {
 
         Map<String, ProductVO> productByName =
                 productList.stream().collect(Collectors.toMap(ProductVO::getProductName, e -> e));
@@ -101,9 +101,10 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 生成excel
         genGoodsTemplateExcel(goodsTemplateList);
         // 压缩文件
-        FileUtils.zipDirectory(Constant.GOODS_TEMPLATE_PATH, Constant.PATH + String.format(Constant.ZIP_NAME,
-                DateUtils.dateTimeNow()));
-
+        String zipFileName = Constant.PATH + String.format(Constant.ZIP_NAME,
+                DateUtils.dateTimeNow());
+        FileUtils.zipDirectory(Constant.GOODS_TEMPLATE_PATH, zipFileName);
+        return zipFileName;
     }
 
     /**

@@ -31,8 +31,7 @@ public class GoodsTemplateController {
     @PostMapping("genGoodsTemplateFiles")
     @ResponseBody
     public AjaxResult genGoodsTemplateFiles(@RequestBody List<ProductVO> productList) {
-        goodsTemplateService.genGoodsTemplateFiles(productList);
-        return AjaxResult.success();
+        return AjaxResult.success(goodsTemplateService.genGoodsTemplateFiles(productList));
     }
 
     @GetMapping("getTemplateList")

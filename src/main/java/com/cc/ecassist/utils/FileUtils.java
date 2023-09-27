@@ -36,7 +36,7 @@ public class FileUtils extends org.apache.commons.io.FileUtils {
 
             zipOut.close();
             fos.close();
-            System.out.println("文件已压缩至 " + zipFilePath);
+            log.error("文件已压缩至 " + zipFilePath);
         } catch (IOException e) {
             log.error("压缩失败", e);
             throw new RuntimeException(e);
