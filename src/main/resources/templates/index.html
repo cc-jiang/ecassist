@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
 
     <!--引入 element-ui 的样式，-->
@@ -14,21 +14,60 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <meta charset="UTF-8">
-    <title>title</title>
+    <title>生成模板</title>
 </head>
 <body>
 
 <div id="app">
-    <el-select v-model="model" placeholder="请选择">
-        <el-option
-                v-for="item in modelList"
-                :key="item.code"
-                :label="item.version"
-                :value="item.code">
-            <span style="float: left">{{ item.version }}</span>
-            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.code }}</span>
-        </el-option>
-    </el-select>
+    <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
+    <el-table
+            :data="productList"
+            style="width: 100%">
+        <el-table-column
+                label="货号"
+                width="300">
+            <template slot-scope="scope">
+                <i class="el-icon-time"></i>
+                <span style="margin-left: 10px">{{ scope.row.productName }}</span>
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="型号"
+                width="180">
+            <template slot-scope="scope">
+                <el-select @change="selectModel(scope.row)" v-model="scope.row.modelList" placeholder="请选择"
+                           filterable multiple>
+                    <el-option
+                            v-for="item in modelList"
+                            :key="item.code"
+                            :label="item.code"
+                            :value="item.code">
+                        <!--                        <span style="float: left">{{ item.version }}</span>-->
+                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.code }}</span>
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column
+                label="类目"
+                width="180">
+            <template slot-scope="scope">
+                <el-select v-model="scope.row.productCategory" placeholder="请选择">
+                    <el-option
+                            v-for="item in productCategoryList"
+                            :key="item"
+                            :label="item"
+                            :value="item">
+                    </el-option>
+                </el-select>
+            </template>
+        </el-table-column>
+        <el-table-column label="操作">
+            <template slot-scope="scope">
+                <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+            </template>
+        </el-table-column>
+    </el-table>
 
 </div>
 </body>
@@ -36,17 +75,48 @@
     new Vue({
         el: '#app',
         data: {
-            model: '',
-            modelList: []
+            productList: [],
+            templateList: [],
+            modelList: [],
+            keywordList: [],
+            productCategoryList: [],
+
+            modelByCode: null
         },
         created() {
+            axios.get('/goodsTemplate/getTemplateList').then(res => {
+                this.productList = res.data.data;
+            });
             axios.get('/goodsTemplate/getModelList').then(res => {
                 this.modelList = res.data.data;
-                console.log(this.modelList);
+                this.modelByCode = this.modelList.reduce((map, e) => {
+                    map.set(e.code, e);
+                    return map;
+                }, new Map());
+            });
+            axios.get('/goodsTemplate/getKeywordList').then(res => {
+                this.keywordList = res.data.data;
+                this.productCategoryList = new Set(this.keywordList.map(keyword => keyword.productCategory));
+                console.log(this.productCategoryList);
             });
         },
         methods: {
-
+            selectModel(product) {
+                // console.log(product)
+                // product.model = product.modelList.join('|');
+                // product.versionNo = product.modelList.join('|');
+            },
+            genGoodsTemplateFiles() {
+                this.productList.forEach(product => {
+                    product.model = product.modelList.join('|');
+                    console.log(this.modelByCode)
+                    product.versionNo = product.modelList.map(e => this.modelByCode.get(e).versionNo).join('|');
+                });
+                axios.post('/goodsTemplate/genGoodsTemplateFiles', this.productList).then(res => {
+                    this.$message.error(res.data.msg);
+                });
+                console.log(this.productList);
+            }
         }
     });
 </script>

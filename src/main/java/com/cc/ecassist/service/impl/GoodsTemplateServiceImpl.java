@@ -23,6 +23,7 @@ import org.springframework.util.FileSystemUtils;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,6 +49,12 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         Map<String, List<OnShelfExportVO>> mapByProductName =
                 templateList.stream().collect(Collectors.groupingBy(OnShelfExportVO::getProductName));
 
+
+        Map<String, List<ModelVO>> modelByVersionNo =
+                getModelList().stream().collect(Collectors.groupingBy(ModelVO::getVersionNo));
+
+        LinkedList<GoodsTemplateVO> goodsTemplateList = Lists.newLinkedList();
+
         mapByProductName.forEach((productName, skuList) -> {
             // 生成路径
             String productPath = Constant.GOODS_TEMPLATE_PATH + productName + "/";
@@ -71,30 +78,44 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             genNewImages(mobilePath, imageByName, product.getPcProductDetail(), null);
 
             // sku图片
-            skuList.forEach(e -> {
+            skuList.forEach(sku -> {
                 // sku路径 名称为 颜色分类
-                String skuPath = productPath + e.getColorCategory();
-                genNewImages(skuPath, imageByName, e.getSkuImage(), e.getSkuTransparentImage());
+                String skuPath = productPath + sku.getColorCategory();
+                genNewImages(skuPath, imageByName, sku.getSkuImage(), sku.getSkuTransparentImage());
 
-            });
-
-            // excel：添加新商品模板
-            EasyExcel.write(productPath + "添加新商品模板.xlsx")
-                    .sheet()
-            .relativeHeadRowIndex(1)
-            .head(GoodsTemplateVO.class)
-            .doWrite(()-> {
-                List<GoodsTemplateVO> list = Lists.newArrayList();
-                // 按excel格式 先填充一行空值
-                list.add(new GoodsTemplateVO());
-                GoodsTemplateVO e = new GoodsTemplateVO();
-                BeanUtils.copyProperties(product, e);
-                e.setShippingPlace(e.getShippingPlace().replace('-', '>'));
-                list.add(e);
-                return list;
+                // excel：添加新商品模板的数据
+                ProductVO productVO = productByName.get(product.getProductName());
+                String[] versionNos = productVO.getVersionNo().split("\\|");
+                for (String versionNo : versionNos) {
+                    List<ModelVO> modelList = modelByVersionNo.get(versionNo);
+                    modelList.forEach(model -> {
+                        GoodsTemplateVO goodsTemplate = new GoodsTemplateVO();
+                        BeanUtils.copyProperties(sku, goodsTemplate);
+                        goodsTemplate.setShippingPlace(goodsTemplate.getShippingPlace().replace('-', '>'));
+                        // 尺码（版本）
+                        goodsTemplate.setVersion(model.getVersion());
+                        goodsTemplateList.add(goodsTemplate);
+                    });
+                }
             });
 
         });
+
+        genGoodsTemplateExcel(goodsTemplateList);
+    }
+
+    /**
+     * 生成excel：添加新商品模板.xlsx
+     * @param goodsTemplateList
+     */
+    private void genGoodsTemplateExcel(LinkedList<GoodsTemplateVO> goodsTemplateList) {
+        // 按excel格式 先填充一行空值
+        goodsTemplateList.addFirst(new GoodsTemplateVO());
+        EasyExcel.write(Constant.GOODS_TEMPLATE_PATH + "添加新商品模板.xlsx")
+                .sheet()
+                .relativeHeadRowIndex(1)
+                .head(GoodsTemplateVO.class)
+                .doWrite(goodsTemplateList);
     }
 
     private List<OnShelfExportVO> genOnShelfExcel(Map<String, ProductVO> productByName) {
@@ -136,6 +157,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         String[] model = StringUtils.defaultString(productVO.getModel()).split("\\|");
         String[] keywordArr = StringUtils.defaultString(productVO.getKeyword()).split("\\|");
         List<String> keyword = Lists.newArrayList(keywordArr);
+        keyword.removeIf(StringUtils::isBlank);
         // 打乱顺序
         Collections.shuffle(keyword);
         // 型号1 + 类目
@@ -248,5 +270,11 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         return new JSONObject(keywordList.stream()
                 .collect(Collectors.groupingBy(KeywordVO::getProductCategory,
                         Collectors.groupingBy(KeywordVO::getType))));
+    }
+
+    @Override
+    public List<OnShelfExportVO> getTemplateList(String excelName) {
+        excelName = StringUtils.isBlank(excelName) ? Constant.ON_SHELF_TEMPLATE_EXCEL_NAME : excelName;
+        return EasyExcel.read(excelName).head(OnShelfExportVO.class).sheet().doReadSync();
     }
 }

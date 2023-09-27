@@ -32,6 +32,13 @@ public class ProductVO implements Serializable {
 
 
     /**
+     * 版本编号 多个用'|'分隔
+     */
+    @ExcelProperty("版本编号")
+    private String versionNo;
+
+
+    /**
      * 型号 多个用'|'分隔
      */
     @ExcelProperty("型号")

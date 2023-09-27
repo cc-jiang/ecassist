@@ -3,6 +3,7 @@ package com.cc.ecassist.service;
 import com.alibaba.fastjson2.JSONObject;
 import com.cc.ecassist.domain.KeywordVO;
 import com.cc.ecassist.domain.ModelVO;
+import com.cc.ecassist.domain.OnShelfExportVO;
 import com.cc.ecassist.domain.ProductVO;
 
 import java.util.List;
@@ -24,4 +25,6 @@ public interface GoodsTemplateService {
     JSONObject getModelData();
 
     JSONObject getKeywordData();
+
+    List<OnShelfExportVO> getTemplateList(String excelName);
 }

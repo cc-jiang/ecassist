@@ -6,8 +6,9 @@ import com.cc.ecassist.service.GoodsTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -27,19 +28,17 @@ public class GoodsTemplateController {
     @Autowired
     private GoodsTemplateService goodsTemplateService;
 
-    @RequestMapping("index")
-    public String index(Model model) {
-        model.addAttribute("modelData", goodsTemplateService.getModelData());
-        model.addAttribute("modelList", goodsTemplateService.getModelList());
-        model.addAttribute("keywordData", goodsTemplateService.getKeywordData());
-        return "index";
-    }
-
-    @GetMapping("genGoodsTemplateFiles")
+    @PostMapping("genGoodsTemplateFiles")
     @ResponseBody
-    public AjaxResult genGoodsTemplateFiles(List<ProductVO> productList) {
+    public AjaxResult genGoodsTemplateFiles(@RequestBody List<ProductVO> productList) {
         goodsTemplateService.genGoodsTemplateFiles(productList);
         return AjaxResult.success();
+    }
+
+    @GetMapping("getTemplateList")
+    @ResponseBody
+    public AjaxResult getTemplateList(String excelName) {
+        return AjaxResult.success(goodsTemplateService.getTemplateList(excelName));
     }
 
     @GetMapping("getModelList")
