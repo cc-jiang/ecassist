@@ -39,4 +39,6 @@ public class Constant {
      * 标题关键词excel
      */
     public static final String KEYWORD_EXCEL_NAME = PATH + "标题关键词.xlsx";
+
+    public static final String ZIP_NAME = "添加新商品模板_%s.zip";
 }

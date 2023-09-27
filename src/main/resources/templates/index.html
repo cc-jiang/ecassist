@@ -19,103 +19,174 @@
 <body>
 
 <div id="app">
-    <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
-    <el-table
-            :data="productList"
-            style="width: 100%">
-        <el-table-column
-                label="货号"
-                width="300">
-            <template slot-scope="scope">
-                <i class="el-icon-time"></i>
-                <span style="margin-left: 10px">{{ scope.row.productName }}</span>
-            </template>
-        </el-table-column>
-        <el-table-column
-                label="型号"
-                width="180">
-            <template slot-scope="scope">
-                <el-select @change="selectModel(scope.row)" v-model="scope.row.modelList" placeholder="请选择"
-                           filterable multiple>
-                    <el-option
-                            v-for="item in modelList"
-                            :key="item.code"
-                            :label="item.code"
-                            :value="item.code">
-                        <!--                        <span style="float: left">{{ item.version }}</span>-->
-                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.code }}</span>
-                    </el-option>
-                </el-select>
-            </template>
-        </el-table-column>
-        <el-table-column
-                label="类目"
-                width="180">
-            <template slot-scope="scope">
-                <el-select v-model="scope.row.productCategory" placeholder="请选择">
-                    <el-option
-                            v-for="item in productCategoryList"
-                            :key="item"
-                            :label="item"
-                            :value="item">
-                    </el-option>
-                </el-select>
-            </template>
-        </el-table-column>
-        <el-table-column label="操作">
-            <template slot-scope="scope">
-                <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-            </template>
-        </el-table-column>
-    </el-table>
+    <el-form>
+        <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
+        <el-button type="info" @click="reload()">重新加载模板</el-button>
+        <el-table
+                :data="productList"
+                style="width: 100%">
+            <el-table-column
+                    label="货号"
+                    width="300">
+                <template slot-scope="scope">
+                    <i class="el-icon-time"></i>
+                    <span style="margin-left: 10px">{{ scope.row.productName }}</span>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    label="型号"
+                    width="180">
+                <template slot-scope="scope">
+                    <el-select @change="selectModel(scope.row)" v-model="scope.row.modelList" placeholder="请选择"
+                               filterable multiple>
+                        <el-option
+                                v-for="item in modelList"
+                                :key="item.code"
+                                :label="item.code"
+                                :value="item.code">
+                            <span style="float: left">{{ item.code }}</span>
+                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
+                        </el-option>
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column
+                    label="类目"
+                    width="180">
+                <template slot-scope="scope">
+                    <el-select v-model="scope.row.productCategory" placeholder="请选择">
+                        <el-option
+                                v-for="item in productCategoryList"
+                                :key="item"
+                                :label="item"
+                                :value="item">
+                        </el-option>
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template slot-scope="scope">
+                    <el-button size="mini" type="success" @click="selectKeyword(scope.$index)">关键词</el-button>
+                    <el-button size="mini" type="danger" @click="handleDelete(scope.$index)">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+
+    </el-form>
+
+
+    <el-dialog
+            title="选择关键词"
+            :visible.sync="keywordVisible"
+            width="30%">
+        <el-checkbox-group v-model="keywordSelected[productIndex]">
+            <el-checkbox v-for="item in keywordList" :label="item.name" :key="item.name"></el-checkbox>
+        </el-checkbox-group>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="keywordVisible = false">取 消</el-button>
+            <el-button type="primary" @click="keywordVisible = false">确 定</el-button>
+        </span>
+    </el-dialog>
 
 </div>
+
 </body>
+
 <script>
     new Vue({
         el: '#app',
         data: {
+            keywordVisible: false,
+
+            keywordSelected: [],
+
+            productIndex: 0,
+
             productList: [],
             templateList: [],
             modelList: [],
             keywordList: [],
             productCategoryList: [],
 
+            list: [],
+
             modelByCode: null
         },
         created() {
-            axios.get('/goodsTemplate/getTemplateList').then(res => {
-                this.productList = res.data.data;
-            });
-            axios.get('/goodsTemplate/getModelList').then(res => {
-                this.modelList = res.data.data;
-                this.modelByCode = this.modelList.reduce((map, e) => {
-                    map.set(e.code, e);
-                    return map;
-                }, new Map());
-            });
-            axios.get('/goodsTemplate/getKeywordList').then(res => {
-                this.keywordList = res.data.data;
-                this.productCategoryList = new Set(this.keywordList.map(keyword => keyword.productCategory));
-                console.log(this.productCategoryList);
-            });
+            this.load();
         },
         methods: {
+            getTemplateList() {
+                axios.get('/goodsTemplate/getTemplateList').then(res => {
+                    this.productList = res.data.data;
+                    this.keywordSelected = [];
+                    this.productList.forEach(e => {
+                        e.productCategory = null;
+                        this.keywordSelected.push([]);
+                    });
+                });
+            },
+            reload() {
+                location.reload();
+            },
+            load() {
+                this.getTemplateList();
+                axios.get('/goodsTemplate/getModelList').then(res => {
+                    this.modelList = res.data.data;
+                    this.modelByCode = this.modelList.reduce((map, e) => {
+                        map.set(e.code, e);
+                        return map;
+                    }, new Map());
+                });
+                axios.get('/goodsTemplate/getKeywordList').then(res => {
+                    this.keywordList = res.data.data;
+                    this.productCategoryList = new Set(this.keywordList.map(keyword => keyword.productCategory));
+                });
+            },
             selectModel(product) {
                 // console.log(product)
                 // product.model = product.modelList.join('|');
                 // product.versionNo = product.modelList.join('|');
             },
             genGoodsTemplateFiles() {
-                this.productList.forEach(product => {
+                if (this.productList == null || this.productList.length === 0) {
+                    this.$message.error('请重新加载模板');
+                    return;
+                }
+                for (let i = 0; i < this.productList.length; i++) {
+                    let product = this.productList[i];
                     product.model = product.modelList.join('|');
-                    console.log(this.modelByCode)
+                    product.keyword = this.keywordSelected[i].join('|');
                     product.versionNo = product.modelList.map(e => this.modelByCode.get(e).versionNo).join('|');
-                });
+                    if (!product.model) {
+                        this.$message.error('请选择型号');
+                        return;
+                    }
+                    if (!product.productCategory) {
+                        this.$message.error('请选择类目');
+                        return;
+                    }
+                    if (!product.keyword) {
+                        this.$message.error('请选择关键词');
+                        return;
+                    }
+                }
                 axios.post('/goodsTemplate/genGoodsTemplateFiles', this.productList).then(res => {
-                    this.$message.error(res.data.msg);
+                    if (res.data.code === 200) {
+                        this.$message.success(res.data.msg);
+                    } else {
+                        this.$message.error(res.data.msg);
+                    }
                 });
-                console.log(this.productList);
+            },
+            selectKeyword(index) {
+                this.productIndex = index;
+                this.keywordVisible = true;
+            },
+            handleDelete(index) {
+                this.productList.splice(index, 1);
+                this.productIndex = 0;
+                this.keywordSelected.splice(index, 1);
             }
         }
     });

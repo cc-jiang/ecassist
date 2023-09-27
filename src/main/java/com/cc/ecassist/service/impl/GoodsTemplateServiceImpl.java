@@ -2,13 +2,9 @@ package com.cc.ecassist.service.impl;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson2.JSONObject;
+import com.cc.ecassist.common.exception.ServiceException;
 import com.cc.ecassist.constant.Constant;
-import com.cc.ecassist.domain.ColorCategory;
-import com.cc.ecassist.domain.GoodsTemplateVO;
-import com.cc.ecassist.domain.KeywordVO;
-import com.cc.ecassist.domain.ModelVO;
-import com.cc.ecassist.domain.OnShelfExportVO;
-import com.cc.ecassist.domain.ProductVO;
+import com.cc.ecassist.domain.*;
 import com.cc.ecassist.service.GoodsTemplateService;
 import com.cc.ecassist.utils.DateUtils;
 import com.cc.ecassist.utils.FileUtils;
@@ -21,12 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -55,6 +46,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
         LinkedList<GoodsTemplateVO> goodsTemplateList = Lists.newLinkedList();
 
+        FileUtils.deleteDir(Constant.GOODS_TEMPLATE_PATH);
         mapByProductName.forEach((productName, skuList) -> {
             // 生成路径
             String productPath = Constant.GOODS_TEMPLATE_PATH + productName + "/";
@@ -63,7 +55,13 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             // 商品 即型号
             OnShelfExportVO product = skuList.get(0);
 
-            Map<String, File> imageByName = Arrays.stream(Objects.requireNonNull(new File(product.getMainImagePath()).listFiles()))
+            File[] imageList ;
+            try {
+                imageList = Objects.requireNonNull(new File(product.getMainImagePath()).listFiles());
+            } catch (NullPointerException e) {
+                throw new RuntimeException("图片路径不存在");
+            }
+            Map<String, File> imageByName = Arrays.stream(imageList)
                     .collect(Collectors.toMap(image -> FilenameUtils.getBaseName(image.getName()), image -> image));
             // 商品图片
             String imagePath= productPath + "商品图片";
@@ -100,8 +98,12 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             });
 
         });
-
+        // 生成excel
         genGoodsTemplateExcel(goodsTemplateList);
+        // 压缩文件
+        FileUtils.zipDirectory(Constant.GOODS_TEMPLATE_PATH, Constant.PATH + String.format(Constant.ZIP_NAME,
+                DateUtils.dateTimeNow()));
+
     }
 
     /**
@@ -127,7 +129,11 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         String exportName = String.format(Constant.ON_SHELF_EXCEL_NAME, DateUtils.dateTimeNow());
         List<OnShelfExportVO> result = Lists.newArrayList();
         templateList.forEach(template -> {
-            template.setProductTitle(buildTitle(productByName.get(template.getProductName())));
+            ProductVO product = productByName.get(template.getProductName());
+            if (product == null) {
+                return;
+            }
+            template.setProductTitle(buildTitle(product));
             colorCategoryList.forEach(colorCategory -> {
                 template.setColorCategory(colorCategory.getCategory());
                 template.setSkuImage(colorCategory.getSkuImage());
@@ -172,7 +178,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 }
                 title.append(model[i]);
             }
-            if (title.length() + keyword.get(i).length() > maxTitleLength) {
+            if (title.length() + keyword.get(i - 1).length() > maxTitleLength) {
                 break;
             }
             // 如果关键词更多 会把多的拼接完
@@ -199,6 +205,9 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         for (int i = 0; i < imageNames.length; i++) {
             String imageName = imageNames[i];
             origin = imageByName.get(imageName);
+            if (origin == null) {
+                throw new ServiceException("图片不存在：" + imageName);
+            }
             String newImagePath = newPath + (i + 1) + "." + FilenameUtils.getExtension(origin.getName());
             copyImage(origin, newImagePath);
         }
@@ -250,6 +259,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 result.add(model);
             }
         });
+        result.sort(Comparator.comparing(ModelVO::getVersionNo));
         return result;
     }
 
