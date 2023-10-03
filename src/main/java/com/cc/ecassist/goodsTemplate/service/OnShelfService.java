@@ -1,4 +1,4 @@
-package com.cc.ecassist.service;
+package com.cc.ecassist.goodsTemplate.service;
 
 /**
  * 上架

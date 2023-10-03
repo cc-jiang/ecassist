@@ -1,4 +1,4 @@
-package com.cc.ecassist.constant;
+package com.cc.ecassist.goodsTemplate.constant;
 
 /**
  * 常量
@@ -41,4 +41,42 @@ public class Constant {
     public static final String KEYWORD_EXCEL_NAME = PATH + "标题关键词.xlsx";
 
     public static final String ZIP_NAME = "添加新商品模板_%s.zip";
+
+    /**
+     * 生成模式
+     */
+    public enum GenType {
+
+        /**
+         * 单型号模式 多型号模式
+         */
+        SINGLE(1, "单型号模式"),
+        MULTI(2, "多型号模式"),
+        ;
+
+        GenType(Integer value, String label) {
+            this.value = value;
+            this.label = label;
+        }
+
+        private Integer value;
+        private String label;
+
+        public Integer getValue() {
+            return value;
+        }
+
+        public void setValue(Integer value) {
+            this.value = value;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(String label) {
+            this.label = label;
+        }
+    }
+
 }

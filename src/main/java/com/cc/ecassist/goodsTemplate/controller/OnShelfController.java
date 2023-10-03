@@ -1,6 +1,6 @@
-package com.cc.ecassist.controller;
+package com.cc.ecassist.goodsTemplate.controller;
 
-import com.cc.ecassist.service.OnShelfService;
+import com.cc.ecassist.goodsTemplate.service.OnShelfService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

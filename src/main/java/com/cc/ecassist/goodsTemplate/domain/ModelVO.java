@@ -1,4 +1,4 @@
-package com.cc.ecassist.domain;
+package com.cc.ecassist.goodsTemplate.domain;
 
 import lombok.Getter;
 import lombok.Setter;

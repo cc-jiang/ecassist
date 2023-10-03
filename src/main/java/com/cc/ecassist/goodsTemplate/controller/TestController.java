@@ -1,9 +1,9 @@
-package com.cc.ecassist.controller;
+package com.cc.ecassist.goodsTemplate.controller;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
-import com.cc.ecassist.domain.ExportVO;
+import com.cc.ecassist.goodsTemplate.domain.ExportVO;
 import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;

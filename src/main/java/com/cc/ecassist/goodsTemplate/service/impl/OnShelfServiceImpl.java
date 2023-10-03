@@ -1,11 +1,11 @@
-package com.cc.ecassist.service.impl;
+package com.cc.ecassist.goodsTemplate.service.impl;
 
 import com.alibaba.excel.EasyExcel;
-import com.cc.ecassist.constant.Constant;
-import com.cc.ecassist.domain.Attribute;
-import com.cc.ecassist.domain.ColorCategory;
-import com.cc.ecassist.domain.OnShelfExportVO;
-import com.cc.ecassist.service.OnShelfService;
+import com.cc.ecassist.goodsTemplate.constant.Constant;
+import com.cc.ecassist.goodsTemplate.domain.Attribute;
+import com.cc.ecassist.goodsTemplate.domain.ColorCategory;
+import com.cc.ecassist.goodsTemplate.domain.OnShelfExportVO;
+import com.cc.ecassist.goodsTemplate.service.OnShelfService;
 import com.cc.ecassist.utils.DateUtils;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;

@@ -1,4 +1,4 @@
-package com.cc.ecassist.domain;
+package com.cc.ecassist.goodsTemplate.domain;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Getter;
@@ -36,7 +36,6 @@ public class ProductVO implements Serializable {
      */
     @ExcelProperty("版本编号")
     private String versionNo;
-
 
     /**
      * 型号 多个用'|'分隔

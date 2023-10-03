@@ -1,4 +1,4 @@
-package com.cc.ecassist.controller;
+package com.cc.ecassist.goodsTemplate.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;

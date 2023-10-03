@@ -1,4 +1,4 @@
-package com.cc.ecassist.constant;
+package com.cc.ecassist.common.constant;
 
 /**
  * 返回状态码

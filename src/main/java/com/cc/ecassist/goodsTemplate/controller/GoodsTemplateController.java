@@ -1,8 +1,8 @@
-package com.cc.ecassist.controller;
+package com.cc.ecassist.goodsTemplate.controller;
 
 import com.cc.ecassist.common.domain.AjaxResult;
-import com.cc.ecassist.domain.ProductVO;
-import com.cc.ecassist.service.GoodsTemplateService;
+import com.cc.ecassist.goodsTemplate.domain.GenGoodsTemplateVO;
+import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.List;
 
 /**
  * 上架
@@ -30,8 +28,8 @@ public class GoodsTemplateController {
 
     @PostMapping("genGoodsTemplateFiles")
     @ResponseBody
-    public AjaxResult genGoodsTemplateFiles(@RequestBody List<ProductVO> productList) {
-        return AjaxResult.success(goodsTemplateService.genGoodsTemplateFiles(productList));
+    public AjaxResult genGoodsTemplateFiles(@RequestBody GenGoodsTemplateVO genGoodsTemplateVO) {
+        return AjaxResult.success(goodsTemplateService.genGoodsTemplateFiles(genGoodsTemplateVO));
     }
 
     @GetMapping("getTemplateList")

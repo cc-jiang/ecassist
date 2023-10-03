@@ -1,11 +1,11 @@
-package com.cc.ecassist.service.impl;
+package com.cc.ecassist.goodsTemplate.service.impl;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson2.JSONObject;
 import com.cc.ecassist.common.exception.ServiceException;
-import com.cc.ecassist.constant.Constant;
-import com.cc.ecassist.domain.*;
-import com.cc.ecassist.service.GoodsTemplateService;
+import com.cc.ecassist.goodsTemplate.constant.Constant;
+import com.cc.ecassist.goodsTemplate.domain.*;
+import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
 import com.cc.ecassist.utils.DateUtils;
 import com.cc.ecassist.utils.FileUtils;
 import com.google.common.collect.Lists;
@@ -31,18 +31,11 @@ import java.util.stream.Collectors;
 public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     @Override
-    public String genGoodsTemplateFiles(List<ProductVO> productList) {
+    public String genGoodsTemplateFiles(GenGoodsTemplateVO genGoodsTemplateVO) {
 
-        Map<String, ProductVO> productByName =
-                productList.stream().collect(Collectors.toMap(ProductVO::getProductName, e -> e));
-
-        List<OnShelfExportVO> templateList = genOnShelfExcel(productByName);
+        List<OnShelfExportVO> templateList = genOnShelfExcel(genGoodsTemplateVO);
         Map<String, List<OnShelfExportVO>> mapByProductName =
                 templateList.stream().collect(Collectors.groupingBy(OnShelfExportVO::getProductName));
-
-
-        Map<String, List<ModelVO>> modelByVersionNo =
-                getModelList().stream().collect(Collectors.groupingBy(ModelVO::getVersionNo));
 
         LinkedList<GoodsTemplateVO> goodsTemplateList = Lists.newLinkedList();
 
@@ -82,19 +75,23 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 genNewImages(skuPath, imageByName, sku.getSkuImage(), sku.getSkuTransparentImage());
 
                 // excel：添加新商品模板的数据
-                ProductVO productVO = productByName.get(product.getProductName());
-                String[] versionNos = productVO.getVersionNo().split("\\|");
-                for (String versionNo : versionNos) {
-                    List<ModelVO> modelList = modelByVersionNo.get(versionNo);
-                    modelList.forEach(model -> {
-                        GoodsTemplateVO goodsTemplate = new GoodsTemplateVO();
-                        BeanUtils.copyProperties(sku, goodsTemplate);
-                        goodsTemplate.setShippingPlace(goodsTemplate.getShippingPlace().replace('-', '>'));
-                        // 尺码（版本）
-                        goodsTemplate.setVersion(model.getVersion());
-                        goodsTemplateList.add(goodsTemplate);
-                    });
-                }
+                GoodsTemplateVO goodsTemplate = new GoodsTemplateVO();
+                BeanUtils.copyProperties(sku, goodsTemplate);
+                goodsTemplate.setShippingPlace(goodsTemplate.getShippingPlace().replace('-', '>'));
+                goodsTemplateList.add(goodsTemplate);
+
+//                List<String> versionNoList = genGoodsTemplateVO.getVersionNoList();
+//                for (String versionNo : versionNoList) {
+//                    List<ModelVO> modelList = modelByVersionNo.get(versionNo);
+//                    modelList.forEach(model -> {
+//                        GoodsTemplateVO goodsTemplate = new GoodsTemplateVO();
+//                        BeanUtils.copyProperties(sku, goodsTemplate);
+//                        goodsTemplate.setShippingPlace(goodsTemplate.getShippingPlace().replace('-', '>'));
+//                        // 尺码（版本）
+//                        goodsTemplate.setVersion(model.getVersion());
+//                        goodsTemplateList.add(goodsTemplate);
+//                    });
+//                }
             });
 
         });
@@ -121,28 +118,55 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 .doWrite(goodsTemplateList);
     }
 
-    private List<OnShelfExportVO> genOnShelfExcel(Map<String, ProductVO> productByName) {
+    private List<OnShelfExportVO> genOnShelfExcel(GenGoodsTemplateVO genGoodsTemplateVO) {
         List<OnShelfExportVO> templateList =
                 EasyExcel.read(Constant.ON_SHELF_TEMPLATE_EXCEL_NAME).head(OnShelfExportVO.class).sheet(0).doReadSync();
         List<ColorCategory> colorCategoryList =
                 EasyExcel.read(Constant.COLOR_CATEGORY_EXCEL_NAME).head(ColorCategory.class).sheet(0).doReadSync();
 
-        String exportName = String.format(Constant.ON_SHELF_EXCEL_NAME, DateUtils.dateTimeNow());
+
+        List<ModelVO> modelList = getModelList();
+        Map<String, List<ModelVO>> modelByVersionNo =
+                modelList.stream().collect(Collectors.groupingBy(ModelVO::getVersionNo));
+        Map<String, ModelVO> modelByCode =
+                modelList.stream().collect(Collectors.toMap(ModelVO::getCode, e -> e));
+
+        OnShelfExportVO template = templateList.get(0);
+        if (!template.getMainImagePath().endsWith("\\")) {
+            template.setMainImagePath(template.getMainImagePath() + "\\");
+        }
+
+
         List<OnShelfExportVO> result = Lists.newArrayList();
-        templateList.forEach(template -> {
-            ProductVO product = productByName.get(template.getProductName());
-            if (product == null) {
-                return;
-            }
-            template.setProductTitle(buildTitle(product));
+        // 默认单型号模式
+        List<String> selectModelList = Lists.newArrayList(genGoodsTemplateVO.getModelList());
+        // 多型号模式 把版本编码一样的型号都生成
+        if (Constant.GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
+            List<String> finalSelectModelList = Lists.newArrayList();
+            genGoodsTemplateVO.getVersionNoList().forEach(versionNo -> {
+                finalSelectModelList.addAll(modelByVersionNo.get(versionNo).stream().map(ModelVO::getCode).collect(Collectors.toList()));
+            });
+            selectModelList = Lists.newArrayList(finalSelectModelList);
+        }
+        selectModelList.forEach(model -> {
+            // TODO: 2023/10/3 标题新规则
+//            template.setProductTitle(buildTitle(product));
             colorCategoryList.forEach(colorCategory -> {
-                template.setColorCategory(colorCategory.getCategory());
-                template.setSkuImage(colorCategory.getSkuImage());
+
                 OnShelfExportVO export = new OnShelfExportVO();
                 BeanUtils.copyProperties(template, export);
+                export.setModel(model);
+                export.setProductName(model + genGoodsTemplateVO.getProductCategory());
+//                export.setMainImagePath(template.getMainImagePath() + model);
+                export.setColorCategory(colorCategory.getCategory());
+                export.setSkuImage(colorCategory.getSkuImage());
+                export.setVersion(modelByCode.get(model).getVersion());
                 result.add(export);
             });
         });
+
+
+        String exportName = String.format(Constant.ON_SHELF_EXCEL_NAME, DateUtils.dateTimeNow());
         EasyExcel.write(exportName)
                 .sheet("上架内容")
                 .head(OnShelfExportVO.class)

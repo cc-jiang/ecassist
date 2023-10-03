@@ -1,6 +1,6 @@
 package com.cc.ecassist;
 
-import com.cc.ecassist.constant.Constant;
+import com.cc.ecassist.goodsTemplate.constant.Constant;
 import com.cc.ecassist.utils.FileUtils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

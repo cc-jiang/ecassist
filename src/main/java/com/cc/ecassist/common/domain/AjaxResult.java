@@ -1,6 +1,6 @@
 package com.cc.ecassist.common.domain;
 
-import com.cc.ecassist.constant.HttpStatus;
+import com.cc.ecassist.common.constant.HttpStatus;
 
 import java.util.HashMap;
 import java.util.Objects;

@@ -22,6 +22,41 @@
     <el-form>
         <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
         <el-button type="info" @click="reload()">重新加载模板</el-button>
+
+
+
+        <el-select v-model="genGoodsTemplate.genType" placeholder="请选择">
+            <el-option
+                    v-for="item in genTypeList"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+            </el-option>
+        </el-select>
+
+        <el-select @change="selectModel" v-model="genGoodsTemplate.modelList" placeholder="请选择"
+                   filterable multiple>
+            <el-option
+                    v-for="item in modelList"
+                    :key="item.code"
+                    :label="item.code"
+                    :value="item.code">
+                <span style="float: left">{{ item.code }}</span>
+                <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
+            </el-option>
+        </el-select>
+
+        <el-select v-model="genGoodsTemplate.productCategory" placeholder="请选择">
+            <el-option
+                    v-for="item in productCategoryList"
+                    :key="item"
+                    :label="item"
+                    :value="item">
+            </el-option>
+        </el-select>
+
+        <el-button size="mini" type="success" @click="selectKeyword()">关键词</el-button>
+
         <el-table
                 :data="productList"
                 style="width: 100%">
@@ -79,7 +114,7 @@
             title="选择关键词"
             :visible.sync="keywordVisible"
             width="30%">
-        <el-checkbox-group v-model="keywordSelected[productIndex]">
+        <el-checkbox-group v-model="genGoodsTemplate.keywordList">
             <el-checkbox v-for="item in keywordList" :label="item.name" :key="item.name"></el-checkbox>
         </el-checkbox-group>
         <span slot="footer" class="dialog-footer">
@@ -100,10 +135,18 @@
 
             keywordSelected: [],
 
-            productIndex: 0,
+            genGoodsTemplate: {
+                path: '',
+                genType: 1,
+                productCategory: '',
+                modelList: [],
+                versionNoList: [],
+                keywordList: []
+            },
 
             productList: [],
             templateList: [],
+            genTypeList: [{value: 1, label: '单型号模式'}, {value: 2, label: '多型号模式'}],
             modelList: [],
             keywordList: [],
             productCategoryList: [],
@@ -143,10 +186,9 @@
                     this.productCategoryList = new Set(this.keywordList.map(keyword => keyword.productCategory));
                 });
             },
-            selectModel(product) {
-                // console.log(product)
-                // product.model = product.modelList.join('|');
-                // product.versionNo = product.modelList.join('|');
+            selectModel() {
+                this.genGoodsTemplate.versionNoList = [...new Set(this.genGoodsTemplate.modelList.map(model => this.modelByCode.get(model).versionNo))];
+                console.log(this.genGoodsTemplate.versionNoList)
             },
             genGoodsTemplateFiles() {
                 if (this.productList == null || this.productList.length === 0) {
@@ -154,24 +196,20 @@
                     return;
                 }
                 for (let i = 0; i < this.productList.length; i++) {
-                    let product = this.productList[i];
-                    product.model = product.modelList.join('|');
-                    product.keyword = this.keywordSelected[i].join('|');
-                    product.versionNo = product.modelList.map(e => this.modelByCode.get(e).versionNo).join('|');
-                    if (!product.model) {
+                    if (this.genGoodsTemplate.modelList === 0) {
                         this.$message.error('请选择型号');
                         return;
                     }
-                    if (!product.productCategory) {
+                    if (!this.genGoodsTemplate.productCategory) {
                         this.$message.error('请选择类目');
                         return;
                     }
-                    if (!product.keyword) {
+                    if (this.genGoodsTemplate.keywordList.length === 0) {
                         this.$message.error('请选择关键词');
                         return;
                     }
                 }
-                axios.post('/goodsTemplate/genGoodsTemplateFiles', this.productList).then(res => {
+                axios.post('/goodsTemplate/genGoodsTemplateFiles', this.genGoodsTemplate).then(res => {
                     if (res.data.code === 200) {
                         this.$message.success(res.data.msg);
                     } else {
@@ -179,14 +217,11 @@
                     }
                 });
             },
-            selectKeyword(index) {
-                this.productIndex = index;
+            selectKeyword() {
                 this.keywordVisible = true;
             },
             handleDelete(index) {
                 this.productList.splice(index, 1);
-                this.productIndex = 0;
-                this.keywordSelected.splice(index, 1);
             }
         }
     });
