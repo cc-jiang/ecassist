@@ -3,8 +3,15 @@ package com.cc.ecassist.goodsTemplate.service.impl;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson2.JSONObject;
 import com.cc.ecassist.common.exception.ServiceException;
-import com.cc.ecassist.goodsTemplate.constant.Constant;
-import com.cc.ecassist.goodsTemplate.domain.*;
+import com.cc.ecassist.goodsTemplate.constant.PathConstant;
+import com.cc.ecassist.goodsTemplate.domain.ColorCategory;
+import com.cc.ecassist.goodsTemplate.domain.GenGoodsTemplateVO;
+import com.cc.ecassist.goodsTemplate.domain.GoodsTemplateVO;
+import com.cc.ecassist.goodsTemplate.domain.KeywordVO;
+import com.cc.ecassist.goodsTemplate.domain.ModelVO;
+import com.cc.ecassist.goodsTemplate.domain.ModelWordVO;
+import com.cc.ecassist.goodsTemplate.domain.OnShelfExportVO;
+import com.cc.ecassist.goodsTemplate.domain.ProductVO;
 import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
 import com.cc.ecassist.utils.DateUtils;
 import com.cc.ecassist.utils.FileUtils;
@@ -17,7 +24,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -33,16 +46,19 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     @Override
     public String genGoodsTemplateFiles(GenGoodsTemplateVO genGoodsTemplateVO) {
 
+        PathConstant.setPATH(genGoodsTemplateVO.getPath());
+        FileUtils.createDir(PathConstant.PATH);
+
         List<OnShelfExportVO> templateList = genOnShelfExcel(genGoodsTemplateVO);
         Map<String, List<OnShelfExportVO>> mapByProductName =
                 templateList.stream().collect(Collectors.groupingBy(OnShelfExportVO::getProductName));
 
         LinkedList<GoodsTemplateVO> goodsTemplateList = Lists.newLinkedList();
 
-        FileUtils.deleteDir(Constant.GOODS_TEMPLATE_PATH);
+        FileUtils.deleteDir(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH));
         mapByProductName.forEach((productName, skuList) -> {
             // 生成路径
-            String productPath = Constant.GOODS_TEMPLATE_PATH + productName + "/";
+            String productPath = PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH) + productName + "/";
             FileUtils.deleteDir(productPath);
 
             // 商品 即型号
@@ -98,9 +114,9 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 生成excel
         genGoodsTemplateExcel(goodsTemplateList);
         // 压缩文件
-        String zipFileName = Constant.PATH + String.format(Constant.ZIP_NAME,
+        String zipFileName = String.format(PathConstant.getFullPath(PathConstant.ZIP_NAME),
                 DateUtils.dateTimeNow());
-        FileUtils.zipDirectory(Constant.GOODS_TEMPLATE_PATH, zipFileName);
+        FileUtils.zipDirectory(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH), zipFileName);
         return zipFileName;
     }
 
@@ -111,7 +127,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     private void genGoodsTemplateExcel(LinkedList<GoodsTemplateVO> goodsTemplateList) {
         // 按excel格式 先填充一行空值
         goodsTemplateList.addFirst(new GoodsTemplateVO());
-        EasyExcel.write(Constant.GOODS_TEMPLATE_PATH + "添加新商品模板.xlsx")
+        EasyExcel.write(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_EXCEL_NAME))
                 .sheet()
                 .relativeHeadRowIndex(1)
                 .head(GoodsTemplateVO.class)
@@ -120,10 +136,14 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     private List<OnShelfExportVO> genOnShelfExcel(GenGoodsTemplateVO genGoodsTemplateVO) {
         List<OnShelfExportVO> templateList =
-                EasyExcel.read(Constant.ON_SHELF_TEMPLATE_EXCEL_NAME).head(OnShelfExportVO.class).sheet(0).doReadSync();
-        List<ColorCategory> colorCategoryList =
-                EasyExcel.read(Constant.COLOR_CATEGORY_EXCEL_NAME).head(ColorCategory.class).sheet(0).doReadSync();
+                EasyExcel.read(PathConstant.getFullPath(PathConstant.ON_SHELF_TEMPLATE_EXCEL_NAME)).head(OnShelfExportVO.class).sheet(0).doReadSync();
+        OnShelfExportVO template = templateList.get(0);
+        if (!template.getMainImagePath().endsWith("\\")) {
+            template.setMainImagePath(template.getMainImagePath() + "\\");
+        }
 
+        List<ColorCategory> colorCategoryList =
+                EasyExcel.read(PathConstant.getFullPath(PathConstant.COLOR_CATEGORY_EXCEL_NAME)).head(ColorCategory.class).sheet(0).doReadSync();
 
         List<ModelVO> modelList = getModelList();
         Map<String, List<ModelVO>> modelByVersionNo =
@@ -131,21 +151,19 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         Map<String, ModelVO> modelByCode =
                 modelList.stream().collect(Collectors.toMap(ModelVO::getCode, e -> e));
 
-        OnShelfExportVO template = templateList.get(0);
-        if (!template.getMainImagePath().endsWith("\\")) {
-            template.setMainImagePath(template.getMainImagePath() + "\\");
-        }
+        List<ModelWordVO> modelWordList = getModelWordList();
+        Map<String, ModelWordVO> modelWordByCode = modelWordList.stream().collect(Collectors.toMap(ModelWordVO::getCode, e -> e));
 
 
         List<OnShelfExportVO> result = Lists.newArrayList();
         // 默认单型号模式
         List<String> selectModelList = Lists.newArrayList(genGoodsTemplateVO.getModelList());
         // 多型号模式 把版本编码一样的型号都生成
-        if (Constant.GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
+        if (PathConstant.GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
             List<String> finalSelectModelList = Lists.newArrayList();
-            genGoodsTemplateVO.getVersionNoList().forEach(versionNo -> {
-                finalSelectModelList.addAll(modelByVersionNo.get(versionNo).stream().map(ModelVO::getCode).collect(Collectors.toList()));
-            });
+            genGoodsTemplateVO.getVersionNoList().forEach(versionNo ->
+                    finalSelectModelList.addAll(modelByVersionNo.get(versionNo).stream()
+                            .map(ModelVO::getCode).collect(Collectors.toList())));
             selectModelList = Lists.newArrayList(finalSelectModelList);
         }
         selectModelList.forEach(model -> {
@@ -166,7 +184,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         });
 
 
-        String exportName = String.format(Constant.ON_SHELF_EXCEL_NAME, DateUtils.dateTimeNow());
+        String exportName = String.format(PathConstant.getFullPath(PathConstant.ON_SHELF_EXCEL_NAME), DateUtils.dateTimeNow());
         EasyExcel.write(exportName)
                 .sheet("上架内容")
                 .head(OnShelfExportVO.class)
@@ -268,7 +286,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     public List<ModelVO> getModelList() {
         List<ModelVO> result = Lists.newArrayList();
 
-        List<Map<Integer, String>> data = EasyExcel.read(Constant.MODEL_EXCEL_NAME).sheet().doReadSync();
+        List<Map<Integer, String>> data = EasyExcel.read(PathConstant.getFullPath(PathConstant.MODEL_EXCEL_NAME)).sheet().doReadSync();
         data.forEach(map -> {
             for (int i = 0; i < map.size(); i += 3) {
                 String versionNo = map.get(i);
@@ -290,7 +308,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     @Override
     public List<KeywordVO> getKeywordList() {
-        return EasyExcel.read(Constant.KEYWORD_EXCEL_NAME).head(KeywordVO.class).sheet().doReadSync();
+        return EasyExcel.read(PathConstant.getFullPath(PathConstant.KEYWORD_EXCEL_NAME)).head(KeywordVO.class).sheet().doReadSync();
     }
 
     @Override
@@ -309,7 +327,37 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     @Override
     public List<OnShelfExportVO> getTemplateList(String excelName) {
-        excelName = StringUtils.isBlank(excelName) ? Constant.ON_SHELF_TEMPLATE_EXCEL_NAME : excelName;
+        excelName = StringUtils.isBlank(excelName) ? PathConstant.getFullPath(PathConstant.ON_SHELF_TEMPLATE_EXCEL_NAME) : excelName;
         return EasyExcel.read(excelName).head(OnShelfExportVO.class).sheet().doReadSync();
+    }
+
+    /**
+     * 获取型号词excel数据
+     * @return
+     */
+    private List<ModelWordVO> getModelWordList() {
+        List<ModelWordVO> result = Lists.newArrayList();
+
+        List<Map<Integer, String>> data = EasyExcel.read(PathConstant.getFullPath(PathConstant.MODEL_WORD_EXCEL_NAME)).sheet().doReadSync();
+        data.forEach(map -> {
+            String code = map.get(0);
+            String firstKeyword = map.get(1);
+            if (StringUtils.isBlank(code) || StringUtils.isBlank(firstKeyword)) {
+                return;
+            }
+            ModelWordVO modelWord = new ModelWordVO();
+            modelWord.setCode(code);
+            modelWord.setFirstKeyword(firstKeyword.equals("无") ? code : firstKeyword);
+            List<String> otherKeyword = Lists.newArrayList();
+            for (int i = 2; i < map.size(); i ++) {
+                if (StringUtils.isNotBlank(map.get(i))) {
+                    otherKeyword.add(map.get(i));
+                }
+            }
+            modelWord.setOtherKeyword(otherKeyword);
+            result.add(modelWord);
+
+        });
+        return result;
     }
 }

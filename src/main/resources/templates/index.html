@@ -23,39 +23,53 @@
         <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
         <el-button type="info" @click="reload()">重新加载模板</el-button>
 
+        <el-form :model="genGoodsTemplate">
 
+            <el-form-item label="路径">
+                <el-input v-model="genGoodsTemplate.path"></el-input>
+            </el-form-item>
 
-        <el-select v-model="genGoodsTemplate.genType" placeholder="请选择">
-            <el-option
-                    v-for="item in genTypeList"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
-            </el-option>
-        </el-select>
+            <el-form-item label="生成模式">
+                <el-select v-model="genGoodsTemplate.genType" placeholder="请选择">
+                    <el-option
+                            v-for="item in genTypeList"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+            </el-form-item>
 
-        <el-select @change="selectModel" v-model="genGoodsTemplate.modelList" placeholder="请选择"
-                   filterable multiple>
-            <el-option
-                    v-for="item in modelList"
-                    :key="item.code"
-                    :label="item.code"
-                    :value="item.code">
-                <span style="float: left">{{ item.code }}</span>
-                <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
-            </el-option>
-        </el-select>
+            <el-form-item label="类目">
+                <el-select v-model="genGoodsTemplate.productCategory" placeholder="请选择">
+                    <el-option
+                            v-for="item in productCategoryList"
+                            :key="item"
+                            :label="item"
+                            :value="item">
+                    </el-option>
+                </el-select>
+            </el-form-item>
 
-        <el-select v-model="genGoodsTemplate.productCategory" placeholder="请选择">
-            <el-option
-                    v-for="item in productCategoryList"
-                    :key="item"
-                    :label="item"
-                    :value="item">
-            </el-option>
-        </el-select>
+            <el-form-item label="型号">
+                <el-select @change="selectModel" v-model="genGoodsTemplate.modelList" placeholder="请选择"
+                           filterable multiple>
+                    <el-option
+                            v-for="item in modelList"
+                            :key="item.code"
+                            :label="item.code"
+                            :value="item.code">
+                        <span style="float: left">{{ item.code }}</span>
+                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
+                    </el-option>
+                </el-select>
+            </el-form-item>
 
-        <el-button size="mini" type="success" @click="selectKeyword()">关键词</el-button>
+            <el-form-item label="关键词">
+                <el-button size="mini" type="success" @click="selectKeyword()">关键词</el-button>
+            </el-form-item>
+
+        </el-form>
 
         <el-table
                 :data="productList"
@@ -159,7 +173,13 @@
             this.load();
         },
         methods: {
-            getTemplateList() {
+            reload() {
+                location.reload();
+            },
+            load() {
+                axios.get('/goodsTemplate/getDefaultPath').then(res => {
+                    this.genGoodsTemplate.path = res.data.data;
+                });
                 axios.get('/goodsTemplate/getTemplateList').then(res => {
                     this.productList = res.data.data;
                     this.keywordSelected = [];
@@ -168,12 +188,6 @@
                         this.keywordSelected.push([]);
                     });
                 });
-            },
-            reload() {
-                location.reload();
-            },
-            load() {
-                this.getTemplateList();
                 axios.get('/goodsTemplate/getModelList').then(res => {
                     this.modelList = res.data.data;
                     this.modelByCode = this.modelList.reduce((map, e) => {

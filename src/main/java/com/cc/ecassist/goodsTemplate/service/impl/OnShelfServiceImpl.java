@@ -1,7 +1,7 @@
 package com.cc.ecassist.goodsTemplate.service.impl;
 
 import com.alibaba.excel.EasyExcel;
-import com.cc.ecassist.goodsTemplate.constant.Constant;
+import com.cc.ecassist.goodsTemplate.constant.PathConstant;
 import com.cc.ecassist.goodsTemplate.domain.Attribute;
 import com.cc.ecassist.goodsTemplate.domain.ColorCategory;
 import com.cc.ecassist.goodsTemplate.domain.OnShelfExportVO;
@@ -27,15 +27,15 @@ public class OnShelfServiceImpl implements OnShelfService {
     public String exportExcel() {
 
         List<Attribute> attributeList =
-                EasyExcel.read(Constant.ATTRIBUTE_EXCEL_NAME).head(Attribute.class).sheet(0).doReadSync();
+                EasyExcel.read(PathConstant.getFullPath(PathConstant.ATTRIBUTE_EXCEL_NAME)).head(Attribute.class).sheet(0).doReadSync();
         List<ColorCategory> colorCategoryList =
-                EasyExcel.read(Constant.COLOR_CATEGORY_EXCEL_NAME).head(ColorCategory.class).sheet(0).doReadSync();
+                EasyExcel.read(PathConstant.getFullPath(PathConstant.COLOR_CATEGORY_EXCEL_NAME)).head(ColorCategory.class).sheet(0).doReadSync();
         List<OnShelfExportVO> templateList =
-                EasyExcel.read(Constant.ON_SHELF_TEMPLATE_EXCEL_NAME).head(OnShelfExportVO.class).sheet(0).doReadSync();
+                EasyExcel.read(PathConstant.getFullPath(PathConstant.ON_SHELF_TEMPLATE_EXCEL_NAME)).head(OnShelfExportVO.class).sheet(0).doReadSync();
 
         OnShelfExportVO template = templateList.get(0);
 
-        String exportName = String.format(Constant.ON_SHELF_EXCEL_NAME, DateUtils.dateTimeNow());
+        String exportName = String.format(PathConstant.getFullPath(PathConstant.ON_SHELF_EXCEL_NAME), DateUtils.dateTimeNow());
         EasyExcel.write(exportName)
                 .sheet("上架内容")
                 .head(OnShelfExportVO.class)
