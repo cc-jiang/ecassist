@@ -4,14 +4,7 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson2.JSONObject;
 import com.cc.ecassist.common.exception.ServiceException;
 import com.cc.ecassist.goodsTemplate.constant.PathConstant;
-import com.cc.ecassist.goodsTemplate.domain.ColorCategory;
-import com.cc.ecassist.goodsTemplate.domain.GenGoodsTemplateVO;
-import com.cc.ecassist.goodsTemplate.domain.GoodsTemplateVO;
-import com.cc.ecassist.goodsTemplate.domain.KeywordVO;
-import com.cc.ecassist.goodsTemplate.domain.ModelVO;
-import com.cc.ecassist.goodsTemplate.domain.ModelWordVO;
-import com.cc.ecassist.goodsTemplate.domain.OnShelfExportVO;
-import com.cc.ecassist.goodsTemplate.domain.ProductVO;
+import com.cc.ecassist.goodsTemplate.domain.*;
 import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
 import com.cc.ecassist.utils.DateUtils;
 import com.cc.ecassist.utils.FileUtils;
@@ -24,13 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,8 +33,10 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     @Override
     public String genGoodsTemplateFiles(GenGoodsTemplateVO genGoodsTemplateVO) {
 
-        PathConstant.setPATH(genGoodsTemplateVO.getPath());
-        FileUtils.createDir(PathConstant.PATH);
+        if (StringUtils.isNotBlank(genGoodsTemplateVO.getPath())) {
+            PathConstant.setPATH(genGoodsTemplateVO.getPath());
+            FileUtils.createDir(PathConstant.PATH);
+        }
 
         List<OnShelfExportVO> templateList = genOnShelfExcel(genGoodsTemplateVO);
         Map<String, List<OnShelfExportVO>> mapByProductName =
@@ -64,7 +53,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             // 商品 即型号
             OnShelfExportVO product = skuList.get(0);
 
-            File[] imageList ;
+            File[] imageList;
             try {
                 imageList = Objects.requireNonNull(new File(product.getMainImagePath()).listFiles());
             } catch (NullPointerException e) {
@@ -73,11 +62,11 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             Map<String, File> imageByName = Arrays.stream(imageList)
                     .collect(Collectors.toMap(image -> FilenameUtils.getBaseName(image.getName()), image -> image));
             // 商品图片
-            String imagePath= productPath + "商品图片";
+            String imagePath = productPath + "商品图片";
             genNewImages(imagePath, imageByName, product.getMainImage(), product.getTransparentImage());
 
             // 电脑版商品详情图
-            String pcPath= productPath + "电脑版商品详情图";
+            String pcPath = productPath + "电脑版商品详情图";
             genNewImages(pcPath, imageByName, product.getPcProductDetail(), null);
 
             // 手机版商品详情图
@@ -122,6 +111,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     /**
      * 生成excel：添加新商品模板.xlsx
+     *
      * @param goodsTemplateList
      */
     private void genGoodsTemplateExcel(LinkedList<GoodsTemplateVO> goodsTemplateList) {
@@ -135,24 +125,26 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     }
 
     private List<OnShelfExportVO> genOnShelfExcel(GenGoodsTemplateVO genGoodsTemplateVO) {
+        // 模板excel
         List<OnShelfExportVO> templateList =
                 EasyExcel.read(PathConstant.getFullPath(PathConstant.ON_SHELF_TEMPLATE_EXCEL_NAME)).head(OnShelfExportVO.class).sheet(0).doReadSync();
         OnShelfExportVO template = templateList.get(0);
         if (!template.getMainImagePath().endsWith("\\")) {
             template.setMainImagePath(template.getMainImagePath() + "\\");
         }
-
+        // 颜色分类excel
         List<ColorCategory> colorCategoryList =
                 EasyExcel.read(PathConstant.getFullPath(PathConstant.COLOR_CATEGORY_EXCEL_NAME)).head(ColorCategory.class).sheet(0).doReadSync();
-
+        // 型号编码excel
         List<ModelVO> modelList = getModelList();
         Map<String, List<ModelVO>> modelByVersionNo =
                 modelList.stream().collect(Collectors.groupingBy(ModelVO::getVersionNo));
         Map<String, ModelVO> modelByCode =
                 modelList.stream().collect(Collectors.toMap(ModelVO::getCode, e -> e));
-
+        // 型号词excel
         List<ModelWordVO> modelWordList = getModelWordList();
-        Map<String, ModelWordVO> modelWordByCode = modelWordList.stream().collect(Collectors.toMap(ModelWordVO::getCode, e -> e));
+        Map<String, ModelWordVO> modelWordByCode =
+                modelWordList.stream().collect(Collectors.toMap(ModelWordVO::getCode, e -> e));
 
 
         List<OnShelfExportVO> result = Lists.newArrayList();
@@ -168,7 +160,8 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         }
         selectModelList.forEach(model -> {
             // TODO: 2023/10/3 标题新规则
-//            template.setProductTitle(buildTitle(product));
+            template.setProductTitle(buildTitle(model, genGoodsTemplateVO, modelByCode, modelByVersionNo,
+                    modelWordByCode));
             colorCategoryList.forEach(colorCategory -> {
 
                 OnShelfExportVO export = new OnShelfExportVO();
@@ -184,7 +177,8 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         });
 
 
-        String exportName = String.format(PathConstant.getFullPath(PathConstant.ON_SHELF_EXCEL_NAME), DateUtils.dateTimeNow());
+        String exportName = String.format(PathConstant.getFullPath(PathConstant.ON_SHELF_EXCEL_NAME),
+                DateUtils.dateTimeNow());
         EasyExcel.write(exportName)
                 .sheet("上架内容")
                 .head(OnShelfExportVO.class)
@@ -200,26 +194,40 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
      * @param productVO
      * @return
      */
-    private String buildTitle(ProductVO productVO) {
+    private String buildTitle(String model, GenGoodsTemplateVO genGoodsTemplateVO, Map<String, ModelVO> modelByCode,
+                              Map<String, List<ModelVO>> modelByVersionNo, Map<String, ModelWordVO> modelWordByCode) {
 
         StringBuilder title = new StringBuilder();
-        String[] model = StringUtils.defaultString(productVO.getModel()).split("\\|");
-        String[] keywordArr = StringUtils.defaultString(productVO.getKeyword()).split("\\|");
-        List<String> keyword = Lists.newArrayList(keywordArr);
+
+        ModelVO modelVO = modelByCode.get(model);
+        List<String> modelSet =
+                modelByVersionNo.get(modelVO.getVersionNo()).stream().map(ModelVO::getCode).collect(Collectors.toList());
+        // 型号关键词
+        List<String> modelKeyword = modelSet.stream()
+                .map(modelWordByCode::get)
+                .map(ModelWordVO::getOtherKeyword).reduce(Lists.newArrayList(), (a, b) -> {
+                    a.addAll(b);
+                    return a;
+                }).stream().distinct().collect(Collectors.toList());
+
+        // 选择的关键词
+        List<String> keyword = genGoodsTemplateVO.getKeywordList();
         keyword.removeIf(StringUtils::isBlank);
         // 打乱顺序
+        Collections.shuffle(modelKeyword);
         Collections.shuffle(keyword);
-        // 型号1 + 类目
-        title.append(model[0]).append(productVO.getProductCategory());
-        int maxTitleLength = 100;
+
+        // 型号关键词1 + 类目
+        title.append(modelWordByCode.get(model).getFirstKeyword()).append(genGoodsTemplateVO.getProductCategory());
+        int maxTitleLength = 50;
         int i = 1;
         // 型号 + 关键词 例 x50PRO诸事顺利
         while (i <= keyword.size()) {
-            if (i < model.length) {
-                if (title.length() + model[i].length() > maxTitleLength) {
+            if (i < modelKeyword.size()) {
+                if (title.length() + modelKeyword.get(i).length() > maxTitleLength) {
                     break;
                 }
-                title.append(model[i]);
+                title.append(modelKeyword.get(i));
             }
             if (title.length() + keyword.get(i - 1).length() > maxTitleLength) {
                 break;
@@ -232,9 +240,10 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     /**
      * 生成文件夹和指定的图片
-     * @param newPath 路径
-     * @param imageByName 所有图片
-     * @param images 源图片文件名 不带图片格式 多个用'|'分隔
+     *
+     * @param newPath          路径
+     * @param imageByName      所有图片
+     * @param images           源图片文件名 不带图片格式 多个用'|'分隔
      * @param transparentImage 透明图 null不生成
      */
     private void genNewImages(String newPath, Map<String, File> imageByName, String images, String transparentImage) {
@@ -263,7 +272,8 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     /**
      * 复制图片
-     * @param origin 源图片
+     *
+     * @param origin         源图片
      * @param destPathPrefix 目标路径 包括文件名
      */
     private void copyImage(File origin, String destPathPrefix) {
@@ -286,7 +296,8 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     public List<ModelVO> getModelList() {
         List<ModelVO> result = Lists.newArrayList();
 
-        List<Map<Integer, String>> data = EasyExcel.read(PathConstant.getFullPath(PathConstant.MODEL_EXCEL_NAME)).sheet().doReadSync();
+        List<Map<Integer, String>> data =
+                EasyExcel.read(PathConstant.getFullPath(PathConstant.MODEL_EXCEL_NAME)).sheet().doReadSync();
         data.forEach(map -> {
             for (int i = 0; i < map.size(); i += 3) {
                 String versionNo = map.get(i);
@@ -327,18 +338,21 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     @Override
     public List<OnShelfExportVO> getTemplateList(String excelName) {
-        excelName = StringUtils.isBlank(excelName) ? PathConstant.getFullPath(PathConstant.ON_SHELF_TEMPLATE_EXCEL_NAME) : excelName;
+        excelName = StringUtils.isBlank(excelName) ?
+                PathConstant.getFullPath(PathConstant.ON_SHELF_TEMPLATE_EXCEL_NAME) : excelName;
         return EasyExcel.read(excelName).head(OnShelfExportVO.class).sheet().doReadSync();
     }
 
     /**
      * 获取型号词excel数据
+     *
      * @return
      */
     private List<ModelWordVO> getModelWordList() {
         List<ModelWordVO> result = Lists.newArrayList();
 
-        List<Map<Integer, String>> data = EasyExcel.read(PathConstant.getFullPath(PathConstant.MODEL_WORD_EXCEL_NAME)).sheet().doReadSync();
+        List<Map<Integer, String>> data =
+                EasyExcel.read(PathConstant.getFullPath(PathConstant.MODEL_WORD_EXCEL_NAME)).sheet().doReadSync();
         data.forEach(map -> {
             String code = map.get(0);
             String firstKeyword = map.get(1);
@@ -349,7 +363,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             modelWord.setCode(code);
             modelWord.setFirstKeyword(firstKeyword.equals("无") ? code : firstKeyword);
             List<String> otherKeyword = Lists.newArrayList();
-            for (int i = 2; i < map.size(); i ++) {
+            for (int i = 2; i < map.size(); i++) {
                 if (StringUtils.isNotBlank(map.get(i))) {
                     otherKeyword.add(map.get(i));
                 }

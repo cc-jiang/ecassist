@@ -19,117 +19,116 @@
 <body>
 
 <div id="app">
-    <el-form>
-        <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
-        <el-button type="info" @click="reload()">重新加载模板</el-button>
+    <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
+    <el-button type="info" @click="reload()">重新加载模板</el-button>
 
-        <el-form :model="genGoodsTemplate">
+    <el-form :model="genGoodsTemplate">
 
-            <el-form-item label="路径">
-                <el-input v-model="genGoodsTemplate.path"></el-input>
-            </el-form-item>
+        <el-form-item label="路径">
+            <el-input v-model="genGoodsTemplate.path"></el-input>
+        </el-form-item>
 
-            <el-form-item label="生成模式">
-                <el-select v-model="genGoodsTemplate.genType" placeholder="请选择">
-                    <el-option
-                            v-for="item in genTypeList"
-                            :key="item.value"
-                            :label="item.label"
-                            :value="item.value">
-                    </el-option>
-                </el-select>
-            </el-form-item>
+        <el-form-item label="生成模式">
+            <el-select v-model="genGoodsTemplate.genType" placeholder="请选择">
+                <el-option
+                        v-for="item in genTypeList"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value">
+                </el-option>
+            </el-select>
+        </el-form-item>
 
-            <el-form-item label="类目">
-                <el-select v-model="genGoodsTemplate.productCategory" placeholder="请选择">
-                    <el-option
-                            v-for="item in productCategoryList"
-                            :key="item"
-                            :label="item"
-                            :value="item">
-                    </el-option>
-                </el-select>
-            </el-form-item>
+        <el-form-item label="类目">
+            <el-select v-model="genGoodsTemplate.productCategory" placeholder="请选择">
+                <el-option
+                        v-for="item in productCategoryList"
+                        :key="item"
+                        :label="item"
+                        :value="item">
+                </el-option>
+            </el-select>
+        </el-form-item>
 
-            <el-form-item label="型号">
-                <el-select @change="selectModel" v-model="genGoodsTemplate.modelList" placeholder="请选择"
-                           filterable multiple>
-                    <el-option
-                            v-for="item in modelList"
-                            :key="item.code"
-                            :label="item.code"
-                            :value="item.code">
-                        <span style="float: left">{{ item.code }}</span>
-                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
-                    </el-option>
-                </el-select>
-            </el-form-item>
+        <el-form-item label="型号">
+            <el-select @change="selectModel" v-model="genGoodsTemplate.modelList" placeholder="请选择"
+                       filterable multiple>
+                <el-option
+                        v-for="item in modelList"
+                        :key="item.code"
+                        :label="item.code"
+                        :value="item.code">
+                    <span style="float: left">{{ item.code }}</span>
+                    <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
+                </el-option>
+            </el-select>
+        </el-form-item>
 
-            <el-form-item label="关键词">
-                <el-button size="mini" type="success" @click="selectKeyword()">关键词</el-button>
-            </el-form-item>
-
-        </el-form>
-
-        <el-table
-                :data="productList"
-                style="width: 100%">
-            <el-table-column
-                    label="货号"
-                    width="300">
-                <template slot-scope="scope">
-                    <i class="el-icon-time"></i>
-                    <span style="margin-left: 10px">{{ scope.row.productName }}</span>
-                </template>
-            </el-table-column>
-            <el-table-column
-                    label="型号"
-                    width="180">
-                <template slot-scope="scope">
-                    <el-select @change="selectModel(scope.row)" v-model="scope.row.modelList" placeholder="请选择"
-                               filterable multiple>
-                        <el-option
-                                v-for="item in modelList"
-                                :key="item.code"
-                                :label="item.code"
-                                :value="item.code">
-                            <span style="float: left">{{ item.code }}</span>
-                            <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
-                        </el-option>
-                    </el-select>
-                </template>
-            </el-table-column>
-            <el-table-column
-                    label="类目"
-                    width="180">
-                <template slot-scope="scope">
-                    <el-select v-model="scope.row.productCategory" placeholder="请选择">
-                        <el-option
-                                v-for="item in productCategoryList"
-                                :key="item"
-                                :label="item"
-                                :value="item">
-                        </el-option>
-                    </el-select>
-                </template>
-            </el-table-column>
-            <el-table-column label="操作">
-                <template slot-scope="scope">
-                    <el-button size="mini" type="success" @click="selectKeyword(scope.$index)">关键词</el-button>
-                    <el-button size="mini" type="danger" @click="handleDelete(scope.$index)">删除</el-button>
-                </template>
-            </el-table-column>
-        </el-table>
+        <el-form-item label="关键词">
+            <el-button size="mini" type="success" @click="selectKeyword()">关键词</el-button>
+        </el-form-item>
 
     </el-form>
+
+<!--    <el-table-->
+<!--            :data="productList"-->
+<!--            style="width: 100%">-->
+<!--        <el-table-column-->
+<!--                label="货号"-->
+<!--                width="300">-->
+<!--            <template slot-scope="scope">-->
+<!--                <i class="el-icon-time"></i>-->
+<!--                <span style="margin-left: 10px">{{ scope.row.productName }}</span>-->
+<!--            </template>-->
+<!--        </el-table-column>-->
+<!--        <el-table-column-->
+<!--                label="型号"-->
+<!--                width="180">-->
+<!--            <template slot-scope="scope">-->
+<!--                <el-select @change="selectModel(scope.row)" v-model="scope.row.modelList" placeholder="请选择"-->
+<!--                           filterable multiple>-->
+<!--                    <el-option-->
+<!--                            v-for="item in modelList"-->
+<!--                            :key="item.code"-->
+<!--                            :label="item.code"-->
+<!--                            :value="item.code">-->
+<!--                        <span style="float: left">{{ item.code }}</span>-->
+<!--                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>-->
+<!--                    </el-option>-->
+<!--                </el-select>-->
+<!--            </template>-->
+<!--        </el-table-column>-->
+<!--        <el-table-column-->
+<!--                label="类目"-->
+<!--                width="180">-->
+<!--            <template slot-scope="scope">-->
+<!--                <el-select v-model="scope.row.productCategory" placeholder="请选择">-->
+<!--                    <el-option-->
+<!--                            v-for="item in productCategoryList"-->
+<!--                            :key="item"-->
+<!--                            :label="item"-->
+<!--                            :value="item">-->
+<!--                    </el-option>-->
+<!--                </el-select>-->
+<!--            </template>-->
+<!--        </el-table-column>-->
+<!--        <el-table-column label="操作">-->
+<!--            <template slot-scope="scope">-->
+<!--                <el-button size="mini" type="success" @click="selectKeyword(scope.$index)">关键词</el-button>-->
+<!--                <el-button size="mini" type="danger" @click="handleDelete(scope.$index)">删除</el-button>-->
+<!--            </template>-->
+<!--        </el-table-column>-->
+<!--    </el-table>-->
 
 
     <el-dialog
             title="选择关键词"
             :visible.sync="keywordVisible"
             width="30%">
-        <el-checkbox-group v-model="genGoodsTemplate.keywordList">
-            <el-checkbox v-for="item in keywordList" :label="item.name" :key="item.name"></el-checkbox>
+        <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+        <div style="margin: 15px 0;"></div>
+        <el-checkbox-group v-model="genGoodsTemplate.keywordList" @change="handleCheckedKeywordChange">
+            <el-checkbox v-for="item in keywordList" :label="item" :key="item">{{ item }}</el-checkbox>
         </el-checkbox-group>
         <span slot="footer" class="dialog-footer">
             <el-button @click="keywordVisible = false">取 消</el-button>
@@ -145,7 +144,12 @@
     new Vue({
         el: '#app',
         data: {
+            // dialog
             keywordVisible: false,
+
+            // 全选框
+            isIndeterminate: false,
+            checkAll: false,
 
             keywordSelected: [],
 
@@ -158,16 +162,16 @@
                 keywordList: []
             },
 
-            productList: [],
             templateList: [],
             genTypeList: [{value: 1, label: '单型号模式'}, {value: 2, label: '多型号模式'}],
             modelList: [],
             keywordList: [],
             productCategoryList: [],
 
-            list: [],
+            modelByCode: null,
 
-            modelByCode: null
+            productList: [],
+            list: []
         },
         created() {
             this.load();
@@ -196,13 +200,13 @@
                     }, new Map());
                 });
                 axios.get('/goodsTemplate/getKeywordList').then(res => {
-                    this.keywordList = res.data.data;
-                    this.productCategoryList = new Set(this.keywordList.map(keyword => keyword.productCategory));
+                    this.keywordList = res.data.data.map(keyword => keyword.name);
+                    this.productCategoryList = [...new Set(res.data.data.map(keyword => keyword.productCategory))];
+                    this.genGoodsTemplate.productCategory = this.productCategoryList[0];
                 });
             },
             selectModel() {
                 this.genGoodsTemplate.versionNoList = [...new Set(this.genGoodsTemplate.modelList.map(model => this.modelByCode.get(model).versionNo))];
-                console.log(this.genGoodsTemplate.versionNoList)
             },
             genGoodsTemplateFiles() {
                 if (this.productList == null || this.productList.length === 0) {
@@ -233,6 +237,15 @@
             },
             selectKeyword() {
                 this.keywordVisible = true;
+            },
+            handleCheckAllChange(val) {
+                this.genGoodsTemplate.keywordList = val ? this.keywordList : [];
+                this.isIndeterminate = false;
+            },
+            handleCheckedKeywordChange(value) {
+                let checkedCount = value.length;
+                this.checkAll = checkedCount === this.keywordList.length;
+                this.isIndeterminate = checkedCount > 0 && checkedCount < this.keywordList.length;
             },
             handleDelete(index) {
                 this.productList.splice(index, 1);
