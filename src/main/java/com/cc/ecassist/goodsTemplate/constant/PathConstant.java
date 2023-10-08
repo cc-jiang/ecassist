@@ -36,6 +36,14 @@ public class PathConstant {
      * 添加新商品模板excel
      */
     public static final String GOODS_TEMPLATE_EXCEL_NAME = GOODS_TEMPLATE_PATH + "添加新商品模板.xlsx";
+    /**
+     * 批量商品属性导入excel
+     */
+    public static final String PRODUCT_PROPERTY_EXCEL_NAME = GOODS_TEMPLATE_PATH + "批量商品属性导入.xlsx";
+    /**
+     * 批量SKU属性导入excel
+     */
+    public static final String SKU_PROPERTY_EXCEL_NAME = GOODS_TEMPLATE_PATH + "批量SKU属性导入.xlsx";
 
     /**
      * 型号编码excel

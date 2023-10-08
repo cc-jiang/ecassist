@@ -33,7 +33,7 @@ public class GoodsTemplateController {
 
     @GetMapping("getDefaultPath")
     public AjaxResult getDefaultPath() {
-        return AjaxResult.success((Object) PathConstant.PATH);
+        return AjaxResult.success((Object) PathConstant.PATH.replace("/", "\\"));
     }
 
     @GetMapping("getTemplateList")

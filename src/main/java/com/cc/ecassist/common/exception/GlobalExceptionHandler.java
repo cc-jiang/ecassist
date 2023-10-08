@@ -1,5 +1,6 @@
 package com.cc.ecassist.common.exception;
 
+import com.alibaba.excel.exception.ExcelRuntimeException;
 import com.cc.ecassist.common.domain.AjaxResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -33,10 +34,20 @@ public class GlobalExceptionHandler {
      * 业务异常
      */
     @ExceptionHandler(ServiceException.class)
-    public AjaxResult handleServiceException(ServiceException e, HttpServletRequest request) {
+    public AjaxResult handleServiceException(ServiceException e) {
         log.error(e.getMessage(), e);
         Integer code = e.getCode();
         return Objects.nonNull(code) ? AjaxResult.error(code, e.getMessage()) : AjaxResult.error(e.getMessage());
+    }
+
+    /**
+     * EasyExcel异常
+     */
+    @ExceptionHandler(ExcelRuntimeException.class)
+    public AjaxResult handleEasyExcelException(ExcelRuntimeException e) {
+        log.error(e.getMessage(), e);
+        Throwable cause = e.getCause();
+        return AjaxResult.error(cause == null ? e.getMessage() : cause.getMessage());
     }
 
     /**
