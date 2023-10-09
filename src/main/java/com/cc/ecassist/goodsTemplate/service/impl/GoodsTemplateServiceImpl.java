@@ -3,6 +3,7 @@ package com.cc.ecassist.goodsTemplate.service.impl;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.fastjson2.JSONObject;
 import com.cc.ecassist.common.exception.ServiceException;
+import com.cc.ecassist.goodsTemplate.constant.GenType;
 import com.cc.ecassist.goodsTemplate.constant.PathConstant;
 import com.cc.ecassist.goodsTemplate.domain.*;
 import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
@@ -63,7 +64,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             try {
                 imageList = Objects.requireNonNull(new File(product.getMainImagePath()).listFiles());
             } catch (NullPointerException e) {
-                throw new RuntimeException("商品主图路径不存在");
+                throw new RuntimeException("商品主图路径不存在：" + product.getMainImagePath());
             }
             Map<String, File> imageByName = Arrays.stream(imageList)
                     .collect(Collectors.toMap(image -> FilenameUtils.getBaseName(image.getName()), image -> image));
@@ -86,7 +87,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 genNewImages(skuPath, imageByName, sku.getSkuImage(), sku.getSkuTransparentImage());
 
                 // excel：批量SKU属性导入
-                skuPropertyList.add(buildSkuProperty(product));
+                skuPropertyList.add(buildSkuProperty(sku));
                 // excel：添加新商品模板的数据
                 GoodsTemplateVO goodsTemplate = new GoodsTemplateVO();
                 BeanUtils.copyProperties(sku, goodsTemplate);
@@ -183,6 +184,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 模板excel
         List<OnShelfExportVO> templateList = getTemplateList(null);
         OnShelfExportVO template = templateList.get(0);
+        template.setMainImagePath(genGoodsTemplateVO.getMainImagePath());
         if (!template.getMainImagePath().endsWith("\\")) {
             template.setMainImagePath(template.getMainImagePath() + "\\");
         }
@@ -211,7 +213,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 默认单型号模式
         List<String> selectModelList = Lists.newArrayList(genGoodsTemplateVO.getModelList());
         // 多型号模式 把版本编码一样的型号都生成
-        if (PathConstant.GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
+        if (GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
             selectModelList = genGoodsTemplateVO.getVersionNoList().stream()
                     .map(modelByVersionNo::get)
                     .flatMap(List::stream)
@@ -252,11 +254,15 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     }
 
     /**
-     * 构建商品标题 每个货号使用同一个标题
-     * 选择多个型号 多个关键词(打乱顺序)
-     * 型号1 + 类目 + {型号n + 关键词n}*n + 多余的关键词
+     * 构建商品标题 每个型号使用同一个标题
+     * 型号词中的关键词 和 页面选择的关键词 都打乱顺序
+     * 型号关键词1 + 类目 + {型号关键词n + 页面关键词n}*n + 多余的页面关键词
      *
-     * @param productVO
+     * @param model
+     * @param genGoodsTemplateVO
+     * @param modelByCode
+     * @param modelByVersionNo
+     * @param modelWordByCode
      * @return
      */
     private String buildTitle(String model, GenGoodsTemplateVO genGoodsTemplateVO, Map<String, ModelVO> modelByCode,
@@ -264,11 +270,14 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
         StringBuilder title = new StringBuilder();
 
-        ModelVO modelVO = modelByCode.get(model);
-        List<String> modelSet =
-                modelByVersionNo.get(modelVO.getVersionNo()).stream().map(ModelVO::getCode).collect(Collectors.toList());
+        List<String> modelList = Collections.singletonList(model);
+        if (GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
+            ModelVO modelVO = modelByCode.get(model);
+            modelList =
+                    modelByVersionNo.get(modelVO.getVersionNo()).stream().map(ModelVO::getCode).collect(Collectors.toList());
+        }
         // 型号关键词
-        List<String> modelKeyword = modelSet.stream()
+        List<String> modelKeyword = modelList.stream()
                 .map(modelWordByCode::get)
                 .map(ModelWordVO::getOtherKeyword)
                 .flatMap(List::stream)
@@ -285,20 +294,20 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 型号关键词1 + 类目
         title.append(modelWordByCode.get(model).getFirstKeyword()).append(genGoodsTemplateVO.getProductCategory());
         int maxTitleLength = 50;
-        int i = 1;
+        int i = 0;
         // 型号 + 关键词 例 x50PRO诸事顺利
-        while (i <= keyword.size()) {
+        while (i < keyword.size()) {
             if (i < modelKeyword.size()) {
                 if (title.length() + modelKeyword.get(i).length() > maxTitleLength) {
                     break;
                 }
                 title.append(modelKeyword.get(i));
             }
-            if (title.length() + keyword.get(i - 1).length() > maxTitleLength) {
+            if (title.length() + keyword.get(i).length() > maxTitleLength) {
                 break;
             }
             // 如果关键词更多 会把多的拼接完
-            title.append(keyword.get(i++ - 1));
+            title.append(keyword.get(i++));
         }
         return title.toString();
     }

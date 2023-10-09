@@ -27,12 +27,12 @@ public class GoodsTemplateVO implements Serializable {
     /**
      * 产品类目
      */
-    @ExcelProperty("类目")
+    @ExcelProperty("*类目")
     private String productCategory;
     /**
      * 商品标题
      */
-    @ExcelProperty("商品标题")
+    @ExcelProperty("*商品标题")
     private String productTitle;
     /**
      * 商品标语
@@ -52,17 +52,17 @@ public class GoodsTemplateVO implements Serializable {
     /**
      * 品牌
      */
-    @ExcelProperty("品牌")
+    @ExcelProperty("*品牌")
     private String brand;
     /**
      * 无理由退货
      */
-    @ExcelProperty("无理由退货")
+    @ExcelProperty("*无理由退货")
     private String noReasonReturn;
     /**
      * 货号
      */
-    @ExcelProperty("货号")
+    @ExcelProperty("*货号")
     private String productName;
     /**
      * 产地
@@ -77,32 +77,32 @@ public class GoodsTemplateVO implements Serializable {
     /**
      * 商品毛重(公斤)
      */
-    @ExcelProperty("商品毛重(公斤)")
+    @ExcelProperty("*商品毛重(公斤)")
     private String grossWeight;
     /**
      * [包装]长(mm)
      */
-    @ExcelProperty("[包装]长(mm)")
+    @ExcelProperty("*[包装]长(mm)")
     private String packageLength;
     /**
      * [包装]宽(mm)
      */
-    @ExcelProperty("[包装]宽(mm)")
+    @ExcelProperty("*[包装]宽(mm)")
     private String packageWidth;
     /**
      * [包装]高(mm)
      */
-    @ExcelProperty("[包装]高(mm)")
+    @ExcelProperty("*[包装]高(mm)")
     private String packageHeight;
     /**
-     * 京东价（元）
+     * 商品京东价
      */
-    @ExcelProperty("京东价")
+    @ExcelProperty("*商品京东价")
     private String jdPrice;
     /**
      * 市场价（元）
      */
-    @ExcelProperty("市场价")
+    @ExcelProperty("*市场价")
     private String marketPrice;
     /**
      * 成本价（元）
@@ -112,7 +112,7 @@ public class GoodsTemplateVO implements Serializable {
     /**
      * 颜色分类
      */
-    @ExcelProperty("颜色分类")
+    @ExcelProperty("颜色")
     private String colorCategory;
     /**
      * 版本
@@ -127,17 +127,17 @@ public class GoodsTemplateVO implements Serializable {
     /**
      * SKU京东价
      */
-    @ExcelProperty("SKU京东价")
+    @ExcelProperty("*SKU京东价")
     private String skuJdPrice;
     /**
      * SKU库存
      */
-    @ExcelProperty("库存")
+    @ExcelProperty("*库存")
     private String skuInventory;
     /**
-     * 商家sku
+     * 商家SKU
      */
-    @ExcelProperty("商家sku")
+    @ExcelProperty("商家SKU")
     private String sku;
     /**
      * 主图视频

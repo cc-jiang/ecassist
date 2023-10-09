@@ -17,7 +17,7 @@
 
 <div id="app">
 
-    <el-form :model="genGoodsTemplate" label-width="80px" style="">
+    <el-form :model="genGoodsTemplate" label-width="120px" style="">
 
         <el-row>
             <el-col :span="8">
@@ -32,6 +32,14 @@
             <el-col :span="8">
                 <el-form-item label="路径">
                     <el-input v-model="genGoodsTemplate.path" style=""></el-input>
+                </el-form-item>
+            </el-col>
+        </el-row>
+
+        <el-row>
+            <el-col :span="8">
+                <el-form-item label="商品主图路径">
+                    <el-input v-model="genGoodsTemplate.mainImagePath" style=""></el-input>
                 </el-form-item>
             </el-col>
         </el-row>
@@ -94,55 +102,55 @@
 
     </el-form>
 
-<!--    <el-table-->
-<!--            :data="productList"-->
-<!--            style="width: 100%">-->
-<!--        <el-table-column-->
-<!--                label="货号"-->
-<!--                width="300">-->
-<!--            <template slot-scope="scope">-->
-<!--                <i class="el-icon-time"></i>-->
-<!--                <span style="margin-left: 10px">{{ scope.row.productName }}</span>-->
-<!--            </template>-->
-<!--        </el-table-column>-->
-<!--        <el-table-column-->
-<!--                label="型号"-->
-<!--                width="180">-->
-<!--            <template slot-scope="scope">-->
-<!--                <el-select @change="selectModel(scope.row)" v-model="scope.row.modelList" placeholder="请选择"-->
-<!--                           filterable multiple>-->
-<!--                    <el-option-->
-<!--                            v-for="item in modelList"-->
-<!--                            :key="item.code"-->
-<!--                            :label="item.code"-->
-<!--                            :value="item.code">-->
-<!--                        <span style="float: left">{{ item.code }}</span>-->
-<!--                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>-->
-<!--                    </el-option>-->
-<!--                </el-select>-->
-<!--            </template>-->
-<!--        </el-table-column>-->
-<!--        <el-table-column-->
-<!--                label="类目"-->
-<!--                width="180">-->
-<!--            <template slot-scope="scope">-->
-<!--                <el-select v-model="scope.row.productCategory" placeholder="请选择">-->
-<!--                    <el-option-->
-<!--                            v-for="item in productCategoryList"-->
-<!--                            :key="item"-->
-<!--                            :label="item"-->
-<!--                            :value="item">-->
-<!--                    </el-option>-->
-<!--                </el-select>-->
-<!--            </template>-->
-<!--        </el-table-column>-->
-<!--        <el-table-column label="操作">-->
-<!--            <template slot-scope="scope">-->
-<!--                <el-button size="mini" type="success" @click="selectKeyword(scope.$index)">关键词</el-button>-->
-<!--                <el-button size="mini" type="danger" @click="handleDelete(scope.$index)">删除</el-button>-->
-<!--            </template>-->
-<!--        </el-table-column>-->
-<!--    </el-table>-->
+    <!--    <el-table-->
+    <!--            :data="productList"-->
+    <!--            style="width: 100%">-->
+    <!--        <el-table-column-->
+    <!--                label="货号"-->
+    <!--                width="300">-->
+    <!--            <template slot-scope="scope">-->
+    <!--                <i class="el-icon-time"></i>-->
+    <!--                <span style="margin-left: 10px">{{ scope.row.productName }}</span>-->
+    <!--            </template>-->
+    <!--        </el-table-column>-->
+    <!--        <el-table-column-->
+    <!--                label="型号"-->
+    <!--                width="180">-->
+    <!--            <template slot-scope="scope">-->
+    <!--                <el-select @change="selectModel(scope.row)" v-model="scope.row.modelList" placeholder="请选择"-->
+    <!--                           filterable multiple>-->
+    <!--                    <el-option-->
+    <!--                            v-for="item in modelList"-->
+    <!--                            :key="item.code"-->
+    <!--                            :label="item.code"-->
+    <!--                            :value="item.code">-->
+    <!--                        <span style="float: left">{{ item.code }}</span>-->
+    <!--                        <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>-->
+    <!--                    </el-option>-->
+    <!--                </el-select>-->
+    <!--            </template>-->
+    <!--        </el-table-column>-->
+    <!--        <el-table-column-->
+    <!--                label="类目"-->
+    <!--                width="180">-->
+    <!--            <template slot-scope="scope">-->
+    <!--                <el-select v-model="scope.row.productCategory" placeholder="请选择">-->
+    <!--                    <el-option-->
+    <!--                            v-for="item in productCategoryList"-->
+    <!--                            :key="item"-->
+    <!--                            :label="item"-->
+    <!--                            :value="item">-->
+    <!--                    </el-option>-->
+    <!--                </el-select>-->
+    <!--            </template>-->
+    <!--        </el-table-column>-->
+    <!--        <el-table-column label="操作">-->
+    <!--            <template slot-scope="scope">-->
+    <!--                <el-button size="mini" type="success" @click="selectKeyword(scope.$index)">关键词</el-button>-->
+    <!--                <el-button size="mini" type="danger" @click="handleDelete(scope.$index)">删除</el-button>-->
+    <!--            </template>-->
+    <!--        </el-table-column>-->
+    <!--    </el-table>-->
 
 
     <el-dialog
@@ -186,6 +194,7 @@
 
             genGoodsTemplate: {
                 path: '',
+                mainImagePath: '',
                 genType: 1,
                 productCategory: '',
                 modelList: [],
@@ -211,14 +220,14 @@
                     // 获取错误信息
                     const msg = res.data.msg;
                     // 二进制数据则直接返回
-                    if (res.request.responseType ===  'blob' || res.request.responseType ===  'arraybuffer') {
+                    if (res.request.responseType === 'blob' || res.request.responseType === 'arraybuffer') {
                         return res.data;
                     }
                     if (code === 500) {
                         this.$message.error(msg);
                         return Promise.reject(new Error(msg));
                     } else if (code !== 200) {
-                        Notification.error({ title: msg })
+                        Notification.error({title: msg})
                         return Promise.reject('error');
                     } else {
                         return res.data;
@@ -242,6 +251,7 @@
                     method: 'get'
                 }).then(res => {
                     this.genGoodsTemplate.path = res.data;
+                    this.genGoodsTemplate.mainImagePath = res.data;
                 });
                 request({
                     url: '/goodsTemplate/getModelList',
@@ -266,19 +276,25 @@
                 this.genGoodsTemplate.versionNoList = [...new Set(this.genGoodsTemplate.modelList.map(model => this.modelByCode.get(model).versionNo))];
             },
             genGoodsTemplateFiles() {
-                for (let i = 0; i < this.productList.length; i++) {
-                    if (this.genGoodsTemplate.modelList === 0) {
-                        this.$message.error('请选择型号');
-                        return;
-                    }
-                    if (!this.genGoodsTemplate.productCategory) {
-                        this.$message.error('请选择类目');
-                        return;
-                    }
-                    if (this.genGoodsTemplate.keywordList.length === 0) {
-                        this.$message.error('请选择关键词');
-                        return;
-                    }
+                if (!!!this.genGoodsTemplate.path) {
+                    this.$message.error('请输入路径');
+                    return;
+                }
+                if (!!!this.genGoodsTemplate.mainImagePath) {
+                    this.$message.error('请输入商品主图路径');
+                    return;
+                }
+                if (this.genGoodsTemplate.modelList === 0) {
+                    this.$message.error('请选择型号');
+                    return;
+                }
+                if (!this.genGoodsTemplate.productCategory) {
+                    this.$message.error('请选择类目');
+                    return;
+                }
+                if (this.genGoodsTemplate.keywordList.length === 0) {
+                    this.$message.error('请选择关键词');
+                    return;
                 }
                 request({
                     url: '/goodsTemplate/genGoodsTemplateFiles',

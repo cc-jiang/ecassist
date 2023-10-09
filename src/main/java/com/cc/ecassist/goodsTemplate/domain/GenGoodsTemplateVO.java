@@ -23,6 +23,11 @@ public class GenGoodsTemplateVO implements Serializable {
     private String path;
 
     /**
+     * 商品主图路径
+     */
+    private String mainImagePath;
+
+    /**
      * 生成模式
      * 多型号模式
      * 单型号模式
