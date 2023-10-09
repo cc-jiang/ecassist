@@ -63,7 +63,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             try {
                 imageList = Objects.requireNonNull(new File(product.getMainImagePath()).listFiles());
             } catch (NullPointerException e) {
-                throw new RuntimeException("图片路径不存在");
+                throw new RuntimeException("商品主图路径不存在");
             }
             Map<String, File> imageByName = Arrays.stream(imageList)
                     .collect(Collectors.toMap(image -> FilenameUtils.getBaseName(image.getName()), image -> image));
