@@ -34,10 +34,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     @Override
     public String genGoodsTemplateFiles(GenGoodsTemplateVO genGoodsTemplateVO) {
 
-        if (StringUtils.isNotBlank(genGoodsTemplateVO.getPath())) {
-            PathConstant.setPATH(genGoodsTemplateVO.getPath().replace("\\", "/"));
-            FileUtils.createDir(PathConstant.PATH);
-        }
+        updatePath(genGoodsTemplateVO.getPath());
 
         List<OnShelfExportVO> templateList = genOnShelfExcel(genGoodsTemplateVO);
         Map<String, List<OnShelfExportVO>> mapByProductName =
@@ -103,6 +100,16 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 DateUtils.dateTimeNow());
         FileUtils.zipDirectory(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH), zipFileName);
         return zipFileName;
+    }
+
+    @Override
+    public void updatePath(String path) {
+        path = path.replace("\\", "/");
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        PathConstant.setPATH(path);
+        FileUtils.createDir(PathConstant.PATH);
     }
 
     /**

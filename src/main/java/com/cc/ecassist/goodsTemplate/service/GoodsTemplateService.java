@@ -15,6 +15,8 @@ public interface GoodsTemplateService {
 
     String genGoodsTemplateFiles(GenGoodsTemplateVO genGoodsTemplateVO);
 
+    void updatePath(String path);
+
     List<ModelVO> getModelList();
 
     List<KeywordVO> getKeywordList();

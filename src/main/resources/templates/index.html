@@ -17,12 +17,13 @@
 
 <div id="app">
 
-    <el-form :model="genGoodsTemplate" label-width="120px" style="">
+    <el-form :model="genGoodsTemplate" v-loading="loading" label-width="120px" style="">
 
         <el-row>
-            <el-col :span="8">
+            <el-col :span="24">
                 <el-form-item label="操作">
                     <el-button type="primary" @click="genGoodsTemplateFiles()">生成文件</el-button>
+                    <el-button type="success" @click="updatePath()">修改路径</el-button>
                     <el-button type="info" @click="reload()">重新加载模板</el-button>
                 </el-form-item>
             </el-col>
@@ -30,7 +31,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="路径">
+                <el-form-item label="模板及生成路径">
                     <el-input v-model="genGoodsTemplate.path" style=""></el-input>
                 </el-form-item>
             </el-col>
@@ -186,6 +187,8 @@
             // dialog
             keywordVisible: false,
 
+            loading: false,
+
             // 全选框
             isIndeterminate: false,
             checkAll: false,
@@ -245,15 +248,18 @@
             reload() {
                 location.reload();
             },
-            load() {
-                request({
+            async load() {
+                this.loading = true;
+                await request({
                     url: '/goodsTemplate/getDefaultPath',
                     method: 'get'
                 }).then(res => {
                     this.genGoodsTemplate.path = res.data;
-                    this.genGoodsTemplate.mainImagePath = res.data;
+                    if (!!!this.genGoodsTemplate.mainImagePath) {
+                        this.genGoodsTemplate.mainImagePath = res.data;
+                    }
                 });
-                request({
+                await request({
                     url: '/goodsTemplate/getModelList',
                     method: 'get'
                 }).then(res => {
@@ -263,7 +269,7 @@
                         return map;
                     }, new Map());
                 });
-                request({
+                await request({
                     url: '/goodsTemplate/getKeywordList',
                     method: 'get'
                 }).then(res => {
@@ -271,6 +277,8 @@
                     this.productCategoryList = [...new Set(res.data.map(keyword => keyword.productCategory))];
                     this.genGoodsTemplate.productCategory = this.productCategoryList[0];
                 });
+                this.loading = false;
+                this.$message.success('数据加载完成');
             },
             selectModel() {
                 this.genGoodsTemplate.versionNoList = [...new Set(this.genGoodsTemplate.modelList.map(model => this.modelByCode.get(model).versionNo))];
@@ -303,6 +311,18 @@
                 }).then(res => {
                     if (res.code === 200) {
                         this.$message.success(res.msg);
+                    }
+                });
+            },
+            updatePath() {
+                request({
+                    url: '/goodsTemplate/updatePath',
+                    method: 'post',
+                    data: {path: this.genGoodsTemplate.path}
+                }).then(res => {
+                    if (res.code === 200) {
+                        this.load();
+                        this.$message.success("修改路径成功");
                     }
                 });
             },

@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 /**
  * 上架
  *
@@ -29,6 +31,12 @@ public class GoodsTemplateController {
     @PostMapping("genGoodsTemplateFiles")
     public AjaxResult genGoodsTemplateFiles(@RequestBody GenGoodsTemplateVO genGoodsTemplateVO) {
         return AjaxResult.success(goodsTemplateService.genGoodsTemplateFiles(genGoodsTemplateVO));
+    }
+
+    @PostMapping("updatePath")
+    public AjaxResult genGoodsTemplateFiles(@RequestBody Map<String, String> param) {
+        goodsTemplateService.updatePath(param.get("path"));
+        return AjaxResult.success();
     }
 
     @GetMapping("getDefaultPath")
