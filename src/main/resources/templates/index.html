@@ -17,7 +17,7 @@
 
 <div id="app">
 
-    <el-form :model="genGoodsTemplate" v-loading="loading" label-width="120px" style="">
+    <el-form :model="genGoodsTemplate" v-loading="loading" label-width="120px">
 
         <el-row>
             <el-col :span="24">
@@ -32,7 +32,7 @@
         <el-row>
             <el-col :span="8">
                 <el-form-item label="模板及生成路径">
-                    <el-input v-model="genGoodsTemplate.path" style=""></el-input>
+                    <el-input v-model="genGoodsTemplate.path"></el-input>
                 </el-form-item>
             </el-col>
         </el-row>
@@ -40,7 +40,7 @@
         <el-row>
             <el-col :span="8">
                 <el-form-item label="商品主图路径">
-                    <el-input v-model="genGoodsTemplate.mainImagePath" style=""></el-input>
+                    <el-input v-model="genGoodsTemplate.mainImagePath"></el-input>
                 </el-form-item>
             </el-col>
         </el-row>
@@ -51,9 +51,9 @@
                     <el-select v-model="genGoodsTemplate.genType" placeholder="请选择">
                         <el-option
                                 v-for="item in genTypeList"
-                                :key="item.value"
-                                :label="item.label"
-                                :value="item.value">
+                                :key="item.index"
+                                :label="item.name"
+                                :value="item.index">
                         </el-option>
                     </el-select>
                 </el-form-item>
@@ -89,6 +89,29 @@
                             <span style="float: right; color: #8492a6; font-size: 13px">{{ item.versionNo }}</span>
                         </el-option>
                     </el-select>
+                </el-form-item>
+            </el-col>
+        </el-row>
+
+        <el-row>
+            <el-col :span="8">
+                <el-form-item label="尺码模式">
+                    <el-select v-model="genGoodsTemplate.versionType" placeholder="请选择">
+                        <el-option
+                                v-for="item in versionTypeList"
+                                :key="item.index"
+                                :label="item.name"
+                                :value="item.index">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-col>
+        </el-row>
+
+        <el-row>
+            <el-col :span="8">
+                <el-form-item label="自填尺码" v-if="genGoodsTemplate.versionType === 2">
+                    <el-input v-model="genGoodsTemplate.versions" placeholder="多个使用英文逗号分隔"></el-input>
                 </el-form-item>
             </el-col>
         </el-row>
@@ -199,14 +222,16 @@
                 path: '',
                 mainImagePath: '',
                 genType: 1,
+                versionType: 1,
+                versions: '',
                 productCategory: '',
                 modelList: [],
                 versionNoList: [],
                 keywordList: []
             },
 
-            templateList: [],
-            genTypeList: [{value: 1, label: '单型号模式'}, {value: 2, label: '多型号模式'}],
+            genTypeList: [{index: 1, name: '单型号模式'}, {index: 2, name: '多型号模式'}],
+            versionTypeList: [{index: 1, name: '使用型号版本'}, {index: 2, name: '自填尺码'}],
             modelList: [],
             keywordList: [],
             productCategoryList: [],

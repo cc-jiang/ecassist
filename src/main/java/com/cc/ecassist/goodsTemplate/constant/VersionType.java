@@ -6,16 +6,16 @@ package com.cc.ecassist.goodsTemplate.constant;
  * @author congcong.jiang
  * @date 2023-10-10
  */
-public enum GenType {
+public enum VersionType {
 
     /**
      * 单型号模式 多型号模式
      */
-    SINGLE(1, "单型号模式"),
-    MULTI(2, "多型号模式"),
+    DEFAULT(1, "使用型号版本"),
+    MANUAL(2, "自填尺码"),
     ;
 
-    GenType(Integer index, String name) {
+    VersionType(Integer index, String name) {
         this.index = index;
         this.name = name;
     }

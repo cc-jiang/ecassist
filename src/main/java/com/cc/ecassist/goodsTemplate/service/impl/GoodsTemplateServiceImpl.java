@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSONObject;
 import com.cc.ecassist.common.exception.ServiceException;
 import com.cc.ecassist.goodsTemplate.constant.GenType;
 import com.cc.ecassist.goodsTemplate.constant.PathConstant;
+import com.cc.ecassist.goodsTemplate.constant.VersionType;
 import com.cc.ecassist.goodsTemplate.domain.*;
 import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
 import com.cc.ecassist.utils.DateUtils;
@@ -85,11 +86,18 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
                 // excel：批量SKU属性导入
                 skuPropertyList.add(buildSkuProperty(sku));
+
                 // excel：添加新商品模板的数据
-                GoodsTemplateVO goodsTemplate = new GoodsTemplateVO();
-                BeanUtils.copyProperties(sku, goodsTemplate);
-                goodsTemplate.setShippingPlace(goodsTemplate.getShippingPlace().replace('-', '>'));
-                goodsTemplateList.add(goodsTemplate);
+                String versions = StringUtils.defaultIfEmpty(genGoodsTemplateVO.getVersions(), sku.getVersion());
+                for (String version : versions.split(",")) {
+                    GoodsTemplateVO goodsTemplate = buildGoodsTemplate(sku);
+                    // 自填尺码模式
+                    if (VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
+                        goodsTemplate.setColorCategory(sku.getVersion() + sku.getColorCategory());
+                        goodsTemplate.setVersion(version);
+                    }
+                    goodsTemplateList.add(goodsTemplate);
+                }
             });
 
         });
@@ -110,6 +118,18 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         }
         PathConstant.setPATH(path);
         FileUtils.createDir(PathConstant.PATH);
+    }
+
+    /**
+     * 构建商品模板
+     * @param sku
+     * @return
+     */
+    private GoodsTemplateVO buildGoodsTemplate(OnShelfExportVO sku) {
+        GoodsTemplateVO result = new GoodsTemplateVO();
+        BeanUtils.copyProperties(sku, result);
+        result.setShippingPlace(result.getShippingPlace().replace('-', '>'));
+        return result;
     }
 
     /**
@@ -220,7 +240,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 默认单型号模式
         List<String> selectModelList = Lists.newArrayList(genGoodsTemplateVO.getModelList());
         // 多型号模式 把版本编码一样的型号都生成
-        if (GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
+        if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
             selectModelList = genGoodsTemplateVO.getVersionNoList().stream()
                     .map(modelByVersionNo::get)
                     .flatMap(List::stream)
@@ -278,7 +298,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         StringBuilder title = new StringBuilder();
 
         List<String> modelList = Collections.singletonList(model);
-        if (GenType.MULTI.getValue().equals(genGoodsTemplateVO.getGenType())) {
+        if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
             ModelVO modelVO = modelByCode.get(model);
             modelList =
                     modelByVersionNo.get(modelVO.getVersionNo()).stream().map(ModelVO::getCode).collect(Collectors.toList());

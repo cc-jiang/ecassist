@@ -29,10 +29,20 @@ public class GenGoodsTemplateVO implements Serializable {
 
     /**
      * 生成模式
-     * 多型号模式
-     * 单型号模式
+     * @see com.cc.ecassist.goodsTemplate.constant.GenType
      */
     private Integer genType;
+
+    /**
+     * 尺码模式
+     * @see com.cc.ecassist.goodsTemplate.constant.VersionType
+     */
+    private Integer versionType;
+
+    /**
+     * 自填尺码 英文逗号分割
+     */
+    private String versions;
 
     /**
      * 产品类目
