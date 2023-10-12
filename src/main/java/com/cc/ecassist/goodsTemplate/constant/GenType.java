@@ -9,7 +9,8 @@ package com.cc.ecassist.goodsTemplate.constant;
 public enum GenType {
 
     /**
-     * 单型号模式 多型号模式
+     * 单型号模式
+     * 多型号模式 标题、货号一致
      */
     SINGLE(1, "单型号模式"),
     MULTI(2, "多型号模式"),

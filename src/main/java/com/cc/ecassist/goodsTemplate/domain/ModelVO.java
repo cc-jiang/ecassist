@@ -23,7 +23,7 @@ public class ModelVO implements Serializable {
     private String versionNo;
 
     /**
-     * 版本
+     * 版本 '/'替换为' '空格
      */
     private String version;
 

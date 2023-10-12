@@ -9,7 +9,7 @@ package com.cc.ecassist.goodsTemplate.constant;
 public enum VersionType {
 
     /**
-     * 单型号模式 多型号模式
+     * 使用型号版本 自填尺码
      */
     DEFAULT(1, "使用型号版本"),
     MANUAL(2, "自填尺码"),

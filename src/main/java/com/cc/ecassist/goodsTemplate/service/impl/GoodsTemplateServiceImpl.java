@@ -20,6 +20,7 @@ import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -78,26 +79,18 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             String mobilePath = productPath + "手机版商品详情图";
             genNewImages(mobilePath, imageByName, product.getPcProductDetail(), null);
 
-            // sku图片
-            skuList.forEach(sku -> {
-                // sku路径 名称为 颜色分类
-                String skuPath = productPath + sku.getColorCategory();
-                genNewImages(skuPath, imageByName, sku.getSkuImage(), sku.getSkuTransparentImage());
-
-                // excel：批量SKU属性导入
-                skuPropertyList.add(buildSkuProperty(sku));
-
-                // excel：添加新商品模板的数据
-                String versions = StringUtils.defaultIfEmpty(genGoodsTemplateVO.getVersions(), sku.getVersion());
-                for (String version : versions.split(",")) {
-                    GoodsTemplateVO goodsTemplate = buildGoodsTemplate(sku);
-                    // 自填尺码模式
-                    if (VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
-                        goodsTemplate.setColorCategory(sku.getVersion() + sku.getColorCategory());
-                        goodsTemplate.setVersion(version);
-                    }
-                    goodsTemplateList.add(goodsTemplate);
-                }
+            skuList.stream()
+                    .peek(sku -> {
+                        // excel：批量SKU属性导入
+                        skuPropertyList.add(buildSkuProperty(sku));
+                        // excel：添加新商品模板的数据
+                        goodsTemplateList.add(buildGoodsTemplate(sku));
+                    })
+                    .collect(Collectors.toMap(OnShelfExportVO::getColorCategory, e -> e, (e1, e2) -> e1))
+                    .forEach((colorCategory, sku) -> {
+                        // sku图片 路径名称为 颜色分类
+                        String skuPath = productPath + colorCategory;
+                        genNewImages(skuPath, imageByName, sku.getSkuImage(), sku.getSkuTransparentImage());
             });
 
         });
@@ -122,6 +115,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
     /**
      * 构建商品模板
+     *
      * @param sku
      * @return
      */
@@ -235,41 +229,60 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         Map<String, Attribute> attributeByModel = attributeList.stream().collect(Collectors.toMap(Attribute::getModel
                 , e -> e));
 
-
         List<OnShelfExportVO> result = Lists.newArrayList();
+
+        // 多型号模式使用 第一个选择的型号
+        String firstModel = genGoodsTemplateVO.getModelList().get(0);
+        AtomicReference<Attribute> attribute = new AtomicReference<>(attributeByModel.get(firstModel));
         // 默认单型号模式
         List<String> selectModelList = Lists.newArrayList(genGoodsTemplateVO.getModelList());
-        // 多型号模式 把版本编码一样的型号都生成
+        // 多型号模式 把版本编码一样的型号都生成 商品标题、货号相同
         if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
             selectModelList = genGoodsTemplateVO.getVersionNoList().stream()
                     .map(modelByVersionNo::get)
                     .flatMap(List::stream)
                     .map(ModelVO::getCode)
                     .collect(Collectors.toList());
+            template.setProductTitle(buildTitle(firstModel, genGoodsTemplateVO, selectModelList, modelByVersionNo,
+                    modelWordByCode));
+            // 用第一个选择的型号拼接类目
+            template.setProductName(firstModel + genGoodsTemplateVO.getProductCategory());
         }
         selectModelList.forEach(model -> {
-            template.setProductTitle(buildTitle(model, genGoodsTemplateVO, modelByCode, modelByVersionNo,
-                    modelWordByCode));
-            Attribute attribute = attributeByModel.get(model);
-            if (attribute == null) {
-                throw new ServiceException("属性.xlsx不存在该型号：" + model);
+            template.setModel(model);
+            template.setMainImagePath(template.getMainImagePath() + model);
+            // 单型号模式 每个型号自有 标题、货号、热门属性
+            if (GenType.SINGLE.getIndex().equals(genGoodsTemplateVO.getGenType())) {
+                template.setProductTitle(buildTitle(model, genGoodsTemplateVO, Collections.singletonList(model),
+                        modelByVersionNo, modelWordByCode));
+                template.setProductName(model + genGoodsTemplateVO.getProductCategory());
+                attribute.set(attributeByModel.get(model));
+                if (attribute.get() == null) {
+                    throw new ServiceException("属性.xlsx不存在该型号：" + model);
+                }
             }
-            template.setApplicableBrand(attribute.getBrand());
-            template.setSkuHotModel(attribute.getHotAttribute());
+            template.setApplicableBrand(attribute.get().getBrand());
+            template.setSkuHotModel(attribute.get().getHotAttribute());
 
             colorCategoryList.forEach(colorCategory -> {
-                OnShelfExportVO export = new OnShelfExportVO();
-                BeanUtils.copyProperties(template, export);
-                export.setModel(model);
-                export.setProductName(model + genGoodsTemplateVO.getProductCategory());
-                export.setMainImagePath(template.getMainImagePath() + model);
-                export.setColorCategory(colorCategory.getCategory());
-                export.setSkuImage(colorCategory.getSkuImage());
-                export.setVersion(modelByCode.get(model).getVersion());
-                result.add(export);
+
+                template.setSkuImage(colorCategory.getSkuImage());
+                template.setColorCategory(colorCategory.getCategory());
+
+                String versions = modelByCode.get(model).getVersion();
+                // 自填尺码模式
+                if (VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
+                    template.setColorCategory(versions + colorCategory.getCategory());
+                    versions = genGoodsTemplateVO.getVersions();
+                }
+                for (String version : versions.split(",")) {
+                    OnShelfExportVO export = new OnShelfExportVO();
+                    BeanUtils.copyProperties(template, export);
+                    export.setVersion(version);
+                    result.add(export);
+                }
             });
         });
-
 
         String exportName = String.format(PathConstant.getFullPath(PathConstant.ON_SHELF_EXCEL_NAME),
                 DateUtils.dateTimeNow());
@@ -292,17 +305,11 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
      * @param modelWordByCode
      * @return
      */
-    private String buildTitle(String model, GenGoodsTemplateVO genGoodsTemplateVO, Map<String, ModelVO> modelByCode,
+    private String buildTitle(String model, GenGoodsTemplateVO genGoodsTemplateVO, List<String> modelList,
                               Map<String, List<ModelVO>> modelByVersionNo, Map<String, ModelWordVO> modelWordByCode) {
 
         StringBuilder title = new StringBuilder();
 
-        List<String> modelList = Collections.singletonList(model);
-        if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
-            ModelVO modelVO = modelByCode.get(model);
-            modelList =
-                    modelByVersionNo.get(modelVO.getVersionNo()).stream().map(ModelVO::getCode).collect(Collectors.toList());
-        }
         // 型号关键词
         List<String> modelKeyword = modelList.stream()
                 .map(modelWordByCode::get)
@@ -409,7 +416,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 }
                 ModelVO model = new ModelVO();
                 model.setVersionNo(versionNo);
-                model.setVersion(version);
+                model.setVersion(version.replace('/', ' '));
                 model.setCode(code);
                 result.add(model);
             }

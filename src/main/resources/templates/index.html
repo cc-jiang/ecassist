@@ -95,7 +95,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="尺码模式">
+                <el-form-item label="尺码模式" v-if="genGoodsTemplate.genType === 2">
                     <el-select v-model="genGoodsTemplate.versionType" placeholder="请选择">
                         <el-option
                                 v-for="item in versionTypeList"
@@ -110,7 +110,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="自填尺码" v-if="genGoodsTemplate.versionType === 2">
+                <el-form-item label="自填尺码" v-if="genGoodsTemplate.genType === 2 && genGoodsTemplate.versionType === 2">
                     <el-input v-model="genGoodsTemplate.versions" placeholder="多个使用英文逗号分隔"></el-input>
                 </el-form-item>
             </el-col>
