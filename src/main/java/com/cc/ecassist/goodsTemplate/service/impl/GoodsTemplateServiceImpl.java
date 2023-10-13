@@ -59,6 +59,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             // excel：批量商品属性导入
             productPropertyList.add(buildProductProperty(product));
 
+            // TODO: 2023/10/13 图片路径识别不正确 
             File[] imageList;
             try {
                 imageList = Objects.requireNonNull(new File(product.getMainImagePath()).listFiles());
@@ -204,10 +205,10 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
         // 模板excel
         List<OnShelfExportVO> templateList = getTemplateList(null);
-        OnShelfExportVO template = templateList.get(0);
-        template.setMainImagePath(genGoodsTemplateVO.getMainImagePath());
-        if (!template.getMainImagePath().endsWith("\\")) {
-            template.setMainImagePath(template.getMainImagePath() + "\\");
+        OnShelfExportVO originTemplate = templateList.get(0);
+        originTemplate.setMainImagePath(genGoodsTemplateVO.getMainImagePath());
+        if (!originTemplate.getMainImagePath().endsWith("\\")) {
+            originTemplate.setMainImagePath(originTemplate.getMainImagePath() + "\\");
         }
         // 颜色分类excel
         List<ColorCategory> colorCategoryList =
@@ -231,57 +232,64 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
         List<OnShelfExportVO> result = Lists.newArrayList();
 
-        // 多型号模式使用 第一个选择的型号
-        String firstModel = genGoodsTemplateVO.getModelList().get(0);
-        AtomicReference<Attribute> attribute = new AtomicReference<>(attributeByModel.get(firstModel));
-        // 默认单型号模式
-        List<String> selectModelList = Lists.newArrayList(genGoodsTemplateVO.getModelList());
-        // 多型号模式 把版本编码一样的型号都生成 商品标题、货号相同
-        if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
-            selectModelList = genGoodsTemplateVO.getVersionNoList().stream()
-                    .map(modelByVersionNo::get)
-                    .flatMap(List::stream)
-                    .map(ModelVO::getCode)
-                    .collect(Collectors.toList());
-            template.setProductTitle(buildTitle(firstModel, genGoodsTemplateVO, selectModelList, modelByVersionNo,
-                    modelWordByCode));
-            // 用第一个选择的型号拼接类目
-            template.setProductName(firstModel + genGoodsTemplateVO.getProductCategory());
-        }
-        selectModelList.forEach(model -> {
-            template.setModel(model);
-            template.setMainImagePath(template.getMainImagePath() + model);
-            // 单型号模式 每个型号自有 标题、货号、热门属性
-            if (GenType.SINGLE.getIndex().equals(genGoodsTemplateVO.getGenType())) {
-                template.setProductTitle(buildTitle(model, genGoodsTemplateVO, Collections.singletonList(model),
-                        modelByVersionNo, modelWordByCode));
-                template.setProductName(model + genGoodsTemplateVO.getProductCategory());
-                attribute.set(attributeByModel.get(model));
-                if (attribute.get() == null) {
-                    throw new ServiceException("属性.xlsx不存在该型号：" + model);
-                }
+        Map<String, List<ModelVO>> selectModelListByVersionNo = genGoodsTemplateVO.getModelList().stream()
+                .map(modelByCode::get).collect(Collectors.groupingBy(ModelVO::getVersionNo));
+        // 多型号模式需要获取第一个选择的型号 所以按versionNo分组
+        selectModelListByVersionNo.forEach((versionNo, list) -> {
+            OnShelfExportVO template = new OnShelfExportVO();
+            BeanUtils.copyProperties(originTemplate, template);
+
+            // 多型号模式使用 第一个选择的型号
+            String firstModel = list.get(0).getCode();
+            AtomicReference<Attribute> attribute = new AtomicReference<>(attributeByModel.get(firstModel));
+            // 默认单型号模式
+            List<String> selectModelList = list.stream().map(ModelVO::getCode).collect(Collectors.toList());
+            // 多型号模式 把版本编码一样的型号都生成 商品标题、货号相同
+            if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
+                selectModelList = modelByVersionNo.get(versionNo).stream()
+                        .map(ModelVO::getCode)
+                        .collect(Collectors.toList());
+                template.setProductTitle(buildTitle(firstModel, genGoodsTemplateVO, selectModelList, modelByVersionNo,
+                        modelWordByCode));
+                // 用第一个选择的型号拼接类目
+                template.setProductName(firstModel + genGoodsTemplateVO.getProductCategory());
             }
-            template.setApplicableBrand(attribute.get().getBrand());
-            template.setSkuHotModel(attribute.get().getHotAttribute());
-
-            colorCategoryList.forEach(colorCategory -> {
-
-                template.setSkuImage(colorCategory.getSkuImage());
-                template.setColorCategory(colorCategory.getCategory());
-
-                String versions = modelByCode.get(model).getVersion();
-                // 自填尺码模式
-                if (VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
-                    template.setColorCategory(versions + colorCategory.getCategory());
-                    versions = genGoodsTemplateVO.getVersions();
+            selectModelList.forEach(model -> {
+                template.setModel(model);
+                // 单型号模式 每个型号自有 标题、货号、热门属性
+                if (GenType.SINGLE.getIndex().equals(genGoodsTemplateVO.getGenType())) {
+                    template.setProductTitle(buildTitle(model, genGoodsTemplateVO, Collections.singletonList(model),
+                            modelByVersionNo, modelWordByCode));
+                    template.setProductName(model + genGoodsTemplateVO.getProductCategory());
+                    attribute.set(attributeByModel.get(model));
+                    if (attribute.get() == null) {
+                        throw new ServiceException("属性.xlsx不存在该型号：" + model);
+                    }
                 }
-                for (String version : versions.split(",")) {
-                    OnShelfExportVO export = new OnShelfExportVO();
-                    BeanUtils.copyProperties(template, export);
-                    export.setVersion(version);
-                    result.add(export);
-                }
+                template.setApplicableBrand(attribute.get().getBrand());
+                template.setSkuHotModel(attribute.get().getHotAttribute());
+
+                colorCategoryList.forEach(colorCategory -> {
+
+                    template.setSkuImage(colorCategory.getSkuImage());
+                    template.setColorCategory(colorCategory.getCategory());
+
+                    String versions = modelByCode.get(model).getVersion();
+                    // 自填尺码模式
+                    if (VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
+                        template.setColorCategory(versions + colorCategory.getCategory());
+                        versions = genGoodsTemplateVO.getVersions();
+                    }
+                    for (String version : versions.split(",")) {
+                        OnShelfExportVO export = new OnShelfExportVO();
+                        BeanUtils.copyProperties(template, export);
+                        export.setMainImagePath(template.getMainImagePath() + model);
+                        export.setVersion(version);
+                        result.add(export);
+                    }
+                });
             });
+
         });
 
         String exportName = String.format(PathConstant.getFullPath(PathConstant.ON_SHELF_EXCEL_NAME),
