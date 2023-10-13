@@ -31,6 +31,15 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 空指针异常
+     */
+    @ExceptionHandler(NullPointerException.class)
+    public AjaxResult handleNullPointerException(NullPointerException e) {
+        log.error(e.getMessage(), e);
+        return AjaxResult.error(e.toString());
+    }
+
+    /**
      * 业务异常
      */
     @ExceptionHandler(ServiceException.class)

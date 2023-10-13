@@ -59,15 +59,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             // excel：批量商品属性导入
             productPropertyList.add(buildProductProperty(product));
 
-            // TODO: 2023/10/13 图片路径识别不正确 
-            File[] imageList;
-            try {
-                imageList = Objects.requireNonNull(new File(product.getMainImagePath()).listFiles());
-            } catch (NullPointerException e) {
-                throw new RuntimeException("商品主图路径不存在：" + product.getMainImagePath());
-            }
-            Map<String, File> imageByName = Arrays.stream(imageList)
-                    .collect(Collectors.toMap(image -> FilenameUtils.getBaseName(image.getName()), image -> image));
+            Map<String, File> imageByName = getImageMap(product.getMainImagePath());
             // 商品图片
             String imagePath = productPath + "商品图片";
             genNewImages(imagePath, imageByName, product.getMainImage(), product.getTransparentImage());
@@ -91,8 +83,9 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                     .forEach((colorCategory, sku) -> {
                         // sku图片 路径名称为 颜色分类
                         String skuPath = productPath + colorCategory;
-                        genNewImages(skuPath, imageByName, sku.getSkuImage(), sku.getSkuTransparentImage());
-            });
+                        genNewImages(skuPath, getImageMap(sku.getMainImagePath()), sku.getSkuImage(),
+                                sku.getSkuTransparentImage());
+                    });
 
         });
         // 生成excel
@@ -102,6 +95,23 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 DateUtils.dateTimeNow());
         FileUtils.zipDirectory(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH), zipFileName);
         return zipFileName;
+    }
+
+    /**
+     * 获取文件夹下的图片
+     *
+     * @param imagePath
+     * @return
+     */
+    private Map<String, File> getImageMap(String imagePath) {
+        File[] imageList;
+        try {
+            imageList = Objects.requireNonNull(new File(imagePath).listFiles());
+        } catch (NullPointerException e) {
+            throw new RuntimeException("商品主图路径不存在：" + imagePath);
+        }
+        return Arrays.stream(imageList)
+                .collect(Collectors.toMap(image -> FilenameUtils.getBaseName(image.getName()), image -> image));
     }
 
     @Override
@@ -172,6 +182,8 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
      * 生成excel：添加新商品模板.xlsx
      *
      * @param goodsTemplateList
+     * @param productPropertyList
+     * @param skuPropertyList
      */
     private void genGoodsTemplateExcel(LinkedList<GoodsTemplateVO> goodsTemplateList,
                                        LinkedList<ProductPropertyVO> productPropertyList,
@@ -246,11 +258,11 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
             List<String> selectModelList = list.stream().map(ModelVO::getCode).collect(Collectors.toList());
             // 多型号模式 把版本编码一样的型号都生成 商品标题、货号相同
             if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
-                selectModelList = modelByVersionNo.get(versionNo).stream()
+                selectModelList.addAll(modelByVersionNo.get(versionNo).stream()
                         .map(ModelVO::getCode)
-                        .collect(Collectors.toList());
-                template.setProductTitle(buildTitle(firstModel, genGoodsTemplateVO, selectModelList, modelByVersionNo,
-                        modelWordByCode));
+                        .collect(Collectors.toList()));
+                selectModelList = selectModelList.stream().distinct().collect(Collectors.toList());
+                template.setProductTitle(buildTitle(firstModel, genGoodsTemplateVO, selectModelList, modelWordByCode));
                 // 用第一个选择的型号拼接类目
                 template.setProductName(firstModel + genGoodsTemplateVO.getProductCategory());
             }
@@ -259,7 +271,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 // 单型号模式 每个型号自有 标题、货号、热门属性
                 if (GenType.SINGLE.getIndex().equals(genGoodsTemplateVO.getGenType())) {
                     template.setProductTitle(buildTitle(model, genGoodsTemplateVO, Collections.singletonList(model),
-                            modelByVersionNo, modelWordByCode));
+                            modelWordByCode));
                     template.setProductName(model + genGoodsTemplateVO.getProductCategory());
                     attribute.set(attributeByModel.get(model));
                     if (attribute.get() == null) {
@@ -308,13 +320,12 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
      *
      * @param model
      * @param genGoodsTemplateVO
-     * @param modelByCode
-     * @param modelByVersionNo
+     * @param modelList
      * @param modelWordByCode
      * @return
      */
     private String buildTitle(String model, GenGoodsTemplateVO genGoodsTemplateVO, List<String> modelList,
-                              Map<String, List<ModelVO>> modelByVersionNo, Map<String, ModelWordVO> modelWordByCode) {
+                              Map<String, ModelWordVO> modelWordByCode) {
 
         StringBuilder title = new StringBuilder();
 
@@ -368,13 +379,16 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         }
         FileUtils.createDir(newPath);
 
+        String originPath = FilenameUtils.getFullPath(imageByName.values().stream().findFirst().get().getPath())
+                .replace('\\', '/');
+
         File origin;
         String[] imageNames = images.split("\\|");
         for (int i = 0; i < imageNames.length; i++) {
             String imageName = imageNames[i];
             origin = imageByName.get(imageName);
             if (origin == null) {
-                throw new ServiceException("图片不存在：" + imageName);
+                throw new ServiceException("图片不存在：" + originPath + imageName);
             }
             String newImagePath = newPath + (i + 1) + "." + FilenameUtils.getExtension(origin.getName());
             copyImage(origin, newImagePath);
@@ -382,6 +396,9 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 透明图
         if (transparentImage != null) {
             origin = imageByName.get(transparentImage);
+            if (origin == null) {
+                throw new ServiceException("透明图不存在：" + originPath + transparentImage);
+            }
             copyImage(origin, newPath + "透明图" + "." + FilenameUtils.getExtension(origin.getName()));
         }
     }
@@ -419,7 +436,8 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                 String versionNo = map.get(i);
                 String version = map.get(i + 1);
                 String code = map.get(i + 2);
-                if (StringUtils.isBlank(versionNo) || StringUtils.isBlank(version) || StringUtils.isBlank(code)) {
+                if (StringUtils.isBlank(versionNo) || StringUtils.isBlank(version) || StringUtils.isBlank(code) ||
+                        "版本".equals(version) || "编码".equals(code)) {
                     continue;
                 }
                 ModelVO model = new ModelVO();

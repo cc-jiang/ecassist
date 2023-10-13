@@ -128,9 +128,13 @@
         </el-row>
 
         <el-row>
-            <el-col :span="8">
+            <el-col :span="12">
                 <el-form-item label="关键词">
-                    <el-button size="mini" type="success" @click="selectKeyword()">选择</el-button>
+<!--                    <el-button size="mini" type="success" @click="selectKeyword()">选择</el-button>-->
+                    <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+                    <el-checkbox-group v-model="genGoodsTemplate.keywordList" @change="handleCheckedKeywordChange">
+                        <el-checkbox v-for="item in keywordList" :label="item" :key="item">{{ item }}</el-checkbox>
+                    </el-checkbox-group>
                 </el-form-item>
             </el-col>
         </el-row>
@@ -265,9 +269,11 @@
                         return res.data;
                     }
                     if (code === 500) {
+                        this.loading = false;
                         this.$message.error(msg);
                         return Promise.reject(new Error(msg));
                     } else if (code !== 200) {
+                        this.loading = false;
                         Notification.error({title: msg})
                         return Promise.reject('error');
                     } else {
@@ -276,7 +282,7 @@
                 },
                 error => {
                     this.loading = false;
-                    console.log('err' + error);
+                    console.log(error);
                     this.$message.error(error);
                     return Promise.reject(error);
                 }
@@ -285,7 +291,7 @@
         },
         methods: {
             reload() {
-                location.reload();
+                this.load();
             },
             async load() {
                 this.loading = true;
@@ -323,6 +329,7 @@
                 this.genGoodsTemplate.versionNoList = [...new Set(this.genGoodsTemplate.modelList.map(model => this.modelByCode.get(model).versionNo))];
             },
             genGoodsTemplateFiles() {
+                this.loading = true;
                 if (!!!this.genGoodsTemplate.path) {
                     this.$message.error('请输入路径');
                     return;
@@ -348,6 +355,7 @@
                     method: 'post',
                     data: this.genGoodsTemplate
                 }).then(res => {
+                    this.loading = false;
                     if (res.code === 200) {
                         this.$notify({
                             title: '生成文件成功',
