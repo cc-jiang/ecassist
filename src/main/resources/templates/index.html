@@ -17,7 +17,7 @@
 
 <div id="app">
 
-    <el-form :model="genGoodsTemplate" v-loading="loading" label-width="120px">
+    <el-form :model="genGoodsTemplate" v-loading="loading" :rules="rules" ref="form" label-width="120px">
 
 <!--        <el-row>-->
 <!--            <el-col :span="12">-->
@@ -42,7 +42,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="模板及生成路径">
+                <el-form-item label="模板路径" prop="path">
                     <el-input v-model="genGoodsTemplate.path"></el-input>
                 </el-form-item>
             </el-col>
@@ -50,7 +50,15 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="商品主图路径">
+                <el-form-item label="生成路径" prop="genPath">
+                    <el-input v-model="genGoodsTemplate.genPath"></el-input>
+                </el-form-item>
+            </el-col>
+        </el-row>
+
+        <el-row>
+            <el-col :span="8">
+                <el-form-item label="商品主图路径" prop="mainImagePath">
                     <el-input v-model="genGoodsTemplate.mainImagePath"></el-input>
                 </el-form-item>
             </el-col>
@@ -58,7 +66,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="生成模式">
+                <el-form-item label="生成模式" prop="genType">
                     <el-select v-model="genGoodsTemplate.genType" placeholder="请选择">
                         <el-option
                                 v-for="item in genTypeList"
@@ -73,7 +81,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="类目">
+                <el-form-item label="类目" prop="productCategory">
                     <el-select v-model="genGoodsTemplate.productCategory" placeholder="请选择">
                         <el-option
                                 v-for="item in productCategoryList"
@@ -88,7 +96,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="型号">
+                <el-form-item label="型号" prop="modelList">
                     <el-select @change="selectModel" v-model="genGoodsTemplate.modelList" placeholder="多个使用英文逗号分隔"
                                :filter-method="filterModel" filterable multiple>
                         <el-option
@@ -106,7 +114,7 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="尺码模式" v-if="genGoodsTemplate.genType === 2">
+                <el-form-item label="尺码模式" prop="versionType" v-if="genGoodsTemplate.genType === 2">
                     <el-select v-model="genGoodsTemplate.versionType" placeholder="请选择">
                         <el-option
                                 v-for="item in versionTypeList"
@@ -121,7 +129,8 @@
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="自填尺码" v-if="genGoodsTemplate.genType === 2 && genGoodsTemplate.versionType === 2">
+                <el-form-item label="自填尺码" prop="versions"
+                              v-if="genGoodsTemplate.genType === 2 && genGoodsTemplate.versionType === 2">
                     <el-input v-model="genGoodsTemplate.versions" placeholder="多个使用英文逗号分隔"></el-input>
                 </el-form-item>
             </el-col>
@@ -129,7 +138,7 @@
 
         <el-row>
             <el-col :span="12">
-                <el-form-item label="关键词">
+                <el-form-item label="关键词" prop="keywordList">
 <!--                    <el-button size="mini" type="success" @click="selectKeyword()">选择</el-button>-->
                     <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
                     <el-checkbox-group v-model="genGoodsTemplate.keywordList" @change="handleCheckedKeywordChange">
@@ -227,6 +236,27 @@
 
             loading: false,
 
+            rules: {
+                path: [
+                    {required: true, message: '请输入模板路径', trigger: 'blur'},
+                ],
+                genPath: [
+                    { required: true, message: '请输入生成路径', trigger: 'blur' },
+                ],
+                mainImagePath: [
+                    { required: true, message: '请输入商品主图路径', trigger: 'blur' },
+                ],
+                modelList: [
+                    { required: true, message: '请选择型号', trigger: 'blur' },
+                ],
+                keywordList: [
+                    { required: true, message: '请选择关键词', trigger: 'blur' },
+                ],
+                versions: [
+                    { required: true, message: '请输入自填尺码', trigger: 'blur' },
+                ]
+            },
+
             alertTitle: '',
 
             // 全选框
@@ -237,6 +267,7 @@
 
             genGoodsTemplate: {
                 path: '',
+                genPath: '',
                 mainImagePath: '',
                 genType: 1,
                 versionType: 1,
@@ -299,10 +330,9 @@
                     url: '/goodsTemplate/getDefaultPath',
                     method: 'get'
                 }).then(res => {
-                    this.genGoodsTemplate.path = res.data;
-                    if (!!!this.genGoodsTemplate.mainImagePath) {
-                        this.genGoodsTemplate.mainImagePath = res.data;
-                    }
+                    this.genGoodsTemplate.path = res.data.path;
+                    this.genGoodsTemplate.genPath = res.data.genPath;
+                    this.genGoodsTemplate.mainImagePath = res.data.mainImagePath;
                 });
                 await request({
                     url: '/goodsTemplate/getModelList',
@@ -329,39 +359,25 @@
                 this.genGoodsTemplate.versionNoList = [...new Set(this.genGoodsTemplate.modelList.map(model => this.modelByCode.get(model).versionNo))];
             },
             genGoodsTemplateFiles() {
-                this.loading = true;
-                if (!!!this.genGoodsTemplate.path) {
-                    this.$message.error('请输入路径');
-                    return;
-                }
-                if (!!!this.genGoodsTemplate.mainImagePath) {
-                    this.$message.error('请输入商品主图路径');
-                    return;
-                }
-                if (this.genGoodsTemplate.modelList === 0) {
-                    this.$message.error('请选择型号');
-                    return;
-                }
-                if (!this.genGoodsTemplate.productCategory) {
-                    this.$message.error('请选择类目');
-                    return;
-                }
-                if (this.genGoodsTemplate.keywordList.length === 0) {
-                    this.$message.error('请选择关键词');
-                    return;
-                }
-                request({
-                    url: '/goodsTemplate/genGoodsTemplateFiles',
-                    method: 'post',
-                    data: this.genGoodsTemplate
-                }).then(res => {
-                    this.loading = false;
-                    if (res.code === 200) {
-                        this.$notify({
-                            title: '生成文件成功',
-                            message: res.msg,
-                            duration: 0
+                this.$refs['form'].validate((valid) => {
+                    if (valid) {
+                        this.loading = true;
+                        request({
+                            url: '/goodsTemplate/genGoodsTemplateFiles',
+                            method: 'post',
+                            data: this.genGoodsTemplate
+                        }).then(res => {
+                            this.loading = false;
+                            if (res.code === 200) {
+                                this.$notify({
+                                    title: '生成文件成功',
+                                    message: res.msg,
+                                    duration: 0
+                                });
+                            }
                         });
+                    } else {
+                        return false;
                     }
                 });
             },
@@ -370,7 +386,7 @@
                 request({
                     url: '/goodsTemplate/updatePath',
                     method: 'post',
-                    data: {path: this.genGoodsTemplate.path}
+                    data: this.genGoodsTemplate
                 }).then(res => {
                     this.loading = false;
                     if (res.code === 200) {
@@ -391,9 +407,6 @@
                     this.genGoodsTemplate.modelList = [...new Set(this.genGoodsTemplate.modelList)]
                 }
             },
-            selectKeyword() {
-                this.keywordVisible = true;
-            },
             handleCheckAllChange(val) {
                 this.genGoodsTemplate.keywordList = val ? this.keywordList : [];
                 this.isIndeterminate = false;
@@ -402,6 +415,9 @@
                 let checkedCount = value.length;
                 this.checkAll = checkedCount === this.keywordList.length;
                 this.isIndeterminate = checkedCount > 0 && checkedCount < this.keywordList.length;
+            },
+            selectKeyword() {
+                this.keywordVisible = true;
             },
             handleDelete(index) {
                 this.productList.splice(index, 1);

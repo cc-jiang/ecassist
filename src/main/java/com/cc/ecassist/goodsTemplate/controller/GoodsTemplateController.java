@@ -6,13 +6,7 @@ import com.cc.ecassist.goodsTemplate.domain.GenGoodsTemplateVO;
 import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 上架
@@ -34,14 +28,18 @@ public class GoodsTemplateController {
     }
 
     @PostMapping("updatePath")
-    public AjaxResult genGoodsTemplateFiles(@RequestBody Map<String, String> param) {
-        goodsTemplateService.updatePath(param.get("path"));
+    public AjaxResult updatePath(@RequestBody GenGoodsTemplateVO genGoodsTemplateVO) {
+        goodsTemplateService.updatePath(genGoodsTemplateVO);
         return AjaxResult.success();
     }
 
     @GetMapping("getDefaultPath")
     public AjaxResult getDefaultPath() {
-        return AjaxResult.success((Object) PathConstant.PATH.replace("/", "\\"));
+        GenGoodsTemplateVO result = new GenGoodsTemplateVO();
+        result.setPath(PathConstant.PATH.replace("/", "\\"));
+        result.setGenPath(PathConstant.GEN_PATH.replace("/", "\\"));
+        result.setMainImagePath(PathConstant.MAIN_IMAGE_PATH.replace("/", "\\"));
+        return AjaxResult.success(result);
     }
 
     @GetMapping("getTemplateList")

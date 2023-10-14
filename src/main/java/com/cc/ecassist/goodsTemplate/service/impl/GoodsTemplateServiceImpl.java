@@ -36,7 +36,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     @Override
     public String genGoodsTemplateFiles(GenGoodsTemplateVO genGoodsTemplateVO) {
 
-        updatePath(genGoodsTemplateVO.getPath());
+        updatePath(genGoodsTemplateVO);
 
         List<OnShelfExportVO> templateList = genOnShelfExcel(genGoodsTemplateVO);
         Map<String, List<OnShelfExportVO>> mapByProductName =
@@ -47,10 +47,10 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         LinkedList<ProductPropertyVO> productPropertyList = Lists.newLinkedList();
         LinkedList<SkuPropertyVO> skuPropertyList = Lists.newLinkedList();
 
-        FileUtils.deleteDir(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH));
+        FileUtils.deleteDir(PathConstant.getFullGenPath(PathConstant.GOODS_TEMPLATE_PATH));
         mapByProductName.forEach((productName, skuList) -> {
             // 生成路径
-            String productPath = PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH) + productName + "/";
+            String productPath = PathConstant.getFullGenPath(PathConstant.GOODS_TEMPLATE_PATH) + productName + "/";
             FileUtils.deleteDir(productPath);
 
             // 商品 即型号
@@ -91,9 +91,9 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
         // 生成excel
         genGoodsTemplateExcel(goodsTemplateList, productPropertyList, skuPropertyList);
         // 压缩文件
-        String zipFileName = String.format(PathConstant.getFullPath(PathConstant.ZIP_NAME),
+        String zipFileName = String.format(PathConstant.getFullGenPath(PathConstant.ZIP_NAME),
                 DateUtils.dateTimeNow());
-        FileUtils.zipDirectory(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_PATH), zipFileName);
+        FileUtils.zipDirectory(PathConstant.getFullGenPath(PathConstant.GOODS_TEMPLATE_PATH), zipFileName);
         return zipFileName;
     }
 
@@ -115,13 +115,10 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
     }
 
     @Override
-    public void updatePath(String path) {
-        path = path.replace("\\", "/");
-        if (!path.endsWith("/")) {
-            path += "/";
-        }
-        PathConstant.setPATH(path);
-        FileUtils.createDir(PathConstant.PATH);
+    public void updatePath(GenGoodsTemplateVO genGoodsTemplateVO) {
+        PathConstant.setPath(genGoodsTemplateVO.getPath());
+        PathConstant.setGenPath(genGoodsTemplateVO.getGenPath());
+        PathConstant.setMainImagePath(genGoodsTemplateVO.getMainImagePath());
     }
 
     /**
@@ -190,18 +187,18 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                                        LinkedList<SkuPropertyVO> skuPropertyList) {
         // 按excel格式 先填充一行空值
         goodsTemplateList.addFirst(new GoodsTemplateVO());
-        EasyExcel.write(PathConstant.getFullPath(PathConstant.GOODS_TEMPLATE_EXCEL_NAME))
+        EasyExcel.write(PathConstant.getFullGenPath(PathConstant.GOODS_TEMPLATE_EXCEL_NAME))
                 .sheet()
                 .relativeHeadRowIndex(1)
                 .head(GoodsTemplateVO.class)
                 .doWrite(goodsTemplateList);
 
-        EasyExcel.write(PathConstant.getFullPath(PathConstant.PRODUCT_PROPERTY_EXCEL_NAME))
+        EasyExcel.write(PathConstant.getFullGenPath(PathConstant.PRODUCT_PROPERTY_EXCEL_NAME))
                 .sheet()
                 .head(ProductPropertyVO.class)
                 .doWrite(productPropertyList);
 
-        EasyExcel.write(PathConstant.getFullPath(PathConstant.SKU_PROPERTY_EXCEL_NAME))
+        EasyExcel.write(PathConstant.getFullGenPath(PathConstant.SKU_PROPERTY_EXCEL_NAME))
                 .sheet()
                 .head(SkuPropertyVO.class)
                 .doWrite(skuPropertyList);
@@ -304,12 +301,12 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
         });
 
-        String exportName = String.format(PathConstant.getFullPath(PathConstant.ON_SHELF_EXCEL_NAME),
-                DateUtils.dateTimeNow());
-        EasyExcel.write(exportName)
-                .sheet("上架内容")
-                .head(OnShelfExportVO.class)
-                .doWrite(result);
+//        String exportName = String.format(PathConstant.getFullGenPath(PathConstant.ON_SHELF_EXCEL_NAME),
+//                DateUtils.dateTimeNow());
+//        EasyExcel.write(exportName)
+//                .sheet("上架内容")
+//                .head(OnShelfExportVO.class)
+//                .doWrite(result);
         return result;
     }
 

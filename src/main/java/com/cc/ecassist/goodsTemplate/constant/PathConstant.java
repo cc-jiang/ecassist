@@ -1,5 +1,6 @@
 package com.cc.ecassist.goodsTemplate.constant;
 
+import com.cc.ecassist.utils.FileUtils;
 import org.apache.logging.log4j.util.Strings;
 
 /**
@@ -11,9 +12,19 @@ import org.apache.logging.log4j.util.Strings;
 public class PathConstant {
 
     /**
-     * 文件根目录
+     * 模板路径
      */
     public static String PATH = "C:/ecassist/";
+
+    /**
+     * 生成路径
+     */
+    public static String GEN_PATH = PATH;
+
+    /**
+     * 商品主图路径
+     */
+    public static String MAIN_IMAGE_PATH = PATH;
 
     /**
      * 上架文件名称
@@ -62,12 +73,38 @@ public class PathConstant {
 
     public static final String ZIP_NAME = "添加新商品模板_%s.zip";
 
+    /**
+     * 获取完整模板路径
+     * @param path
+     * @return
+     */
     public static String getFullPath(String path) {
         return PATH + path;
     }
 
-    public static void setPATH(String path) {
+    /**
+     * 获取完整生成路径
+     * @param path
+     * @return
+     */
+    public static String getFullGenPath(String path) {
+        return GEN_PATH + path;
+    }
+
+    public static void setPath(String path) {
+        path = path.replace("\\", "/");
         PATH = path + (path.endsWith("/") ? Strings.EMPTY : "/");
+        FileUtils.createDir(PathConstant.PATH);
+    }
+
+    public static void setGenPath(String genPath) {
+        genPath = genPath.replace("\\", "/");
+        GEN_PATH = genPath + (genPath.endsWith("/") ? Strings.EMPTY : "/");
+    }
+
+    public static void setMainImagePath(String mainImagePath) {
+        mainImagePath = mainImagePath.replace("\\", "/");
+        MAIN_IMAGE_PATH = mainImagePath + (mainImagePath.endsWith("/") ? Strings.EMPTY : "/");
     }
 
 }

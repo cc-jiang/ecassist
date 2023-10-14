@@ -1,7 +1,10 @@
 package com.cc.ecassist.goodsTemplate.service;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.cc.ecassist.goodsTemplate.domain.*;
+import com.cc.ecassist.goodsTemplate.domain.GenGoodsTemplateVO;
+import com.cc.ecassist.goodsTemplate.domain.KeywordVO;
+import com.cc.ecassist.goodsTemplate.domain.ModelVO;
+import com.cc.ecassist.goodsTemplate.domain.OnShelfExportVO;
 
 import java.util.List;
 
@@ -15,7 +18,7 @@ public interface GoodsTemplateService {
 
     String genGoodsTemplateFiles(GenGoodsTemplateVO genGoodsTemplateVO);
 
-    void updatePath(String path);
+    void updatePath(GenGoodsTemplateVO genGoodsTemplateVO);
 
     List<ModelVO> getModelList();
 
