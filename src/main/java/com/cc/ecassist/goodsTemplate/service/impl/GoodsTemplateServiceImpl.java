@@ -284,8 +284,9 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                     template.setColorCategory(colorCategory.getCategory());
 
                     String versions = modelByCode.get(model).getVersion();
-                    // 自填尺码模式
-                    if (VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
+··                    // 多型号的自填尺码模式
+                    if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())
+                            && VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
                         template.setColorCategory(versions + colorCategory.getCategory());
                         versions = genGoodsTemplateVO.getVersions();
                     }
