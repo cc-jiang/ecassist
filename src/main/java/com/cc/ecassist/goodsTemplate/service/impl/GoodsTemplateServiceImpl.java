@@ -6,7 +6,16 @@ import com.cc.ecassist.common.exception.ServiceException;
 import com.cc.ecassist.goodsTemplate.constant.GenType;
 import com.cc.ecassist.goodsTemplate.constant.PathConstant;
 import com.cc.ecassist.goodsTemplate.constant.VersionType;
-import com.cc.ecassist.goodsTemplate.domain.*;
+import com.cc.ecassist.goodsTemplate.domain.Attribute;
+import com.cc.ecassist.goodsTemplate.domain.ColorCategory;
+import com.cc.ecassist.goodsTemplate.domain.GenGoodsTemplateVO;
+import com.cc.ecassist.goodsTemplate.domain.GoodsTemplateVO;
+import com.cc.ecassist.goodsTemplate.domain.KeywordVO;
+import com.cc.ecassist.goodsTemplate.domain.ModelVO;
+import com.cc.ecassist.goodsTemplate.domain.ModelWordVO;
+import com.cc.ecassist.goodsTemplate.domain.OnShelfExportVO;
+import com.cc.ecassist.goodsTemplate.domain.ProductPropertyVO;
+import com.cc.ecassist.goodsTemplate.domain.SkuPropertyVO;
 import com.cc.ecassist.goodsTemplate.service.GoodsTemplateService;
 import com.cc.ecassist.utils.DateUtils;
 import com.cc.ecassist.utils.FileUtils;
@@ -19,8 +28,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 
 import java.io.File;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -241,42 +255,32 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
         List<OnShelfExportVO> result = Lists.newArrayList();
 
-        Map<String, List<ModelVO>> selectModelListByVersionNo = genGoodsTemplateVO.getModelList().stream()
-                .map(modelByCode::get).collect(Collectors.groupingBy(ModelVO::getVersionNo));
-        // 多型号模式需要获取第一个选择的型号 所以按versionNo分组
-        selectModelListByVersionNo.forEach((versionNo, list) -> {
+        genGoodsTemplateVO.getModelList().stream().map(modelByCode::get).forEach(modelVO -> {
             OnShelfExportVO template = new OnShelfExportVO();
             BeanUtils.copyProperties(originTemplate, template);
 
-            // 多型号模式使用 第一个选择的型号
-            String firstModel = list.get(0).getCode();
-            AtomicReference<Attribute> attribute = new AtomicReference<>(attributeByModel.get(firstModel));
+            String modelCode = modelVO.getCode();
+            Attribute attribute = attributeByModel.get(modelCode);
+            if (attribute == null) {
+                throw new ServiceException("属性.xlsx不存在该型号：" + modelCode);
+            }
             // 默认单型号模式
-            List<String> selectModelList = list.stream().map(ModelVO::getCode).collect(Collectors.toList());
+            List<String> selectModelList = Lists.newArrayList(modelVO.getCode());
             // 多型号模式 把版本编码一样的型号都生成 商品标题、货号相同
             if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())) {
-                selectModelList.addAll(modelByVersionNo.get(versionNo).stream()
+                selectModelList.addAll(modelByVersionNo.get(modelVO.getVersionNo()).stream()
                         .map(ModelVO::getCode)
                         .collect(Collectors.toList()));
                 selectModelList = selectModelList.stream().distinct().collect(Collectors.toList());
-                template.setProductTitle(buildTitle(firstModel, genGoodsTemplateVO, selectModelList, modelWordByCode));
-                // 用第一个选择的型号拼接类目
-                template.setProductName(firstModel + genGoodsTemplateVO.getProductCategory());
             }
+            // 单型号模式selectModelList只有一个，所以也不需要重新构建标题和货号
+            template.setProductTitle(buildTitle(modelCode, genGoodsTemplateVO, selectModelList, modelWordByCode));
+            template.setProductName(modelCode + genGoodsTemplateVO.getProductCategory());
+
             selectModelList.forEach(model -> {
                 template.setModel(model);
-                // 单型号模式 每个型号自有 标题、货号、热门属性
-                if (GenType.SINGLE.getIndex().equals(genGoodsTemplateVO.getGenType())) {
-                    template.setProductTitle(buildTitle(model, genGoodsTemplateVO, Collections.singletonList(model),
-                            modelWordByCode));
-                    template.setProductName(model + genGoodsTemplateVO.getProductCategory());
-                    attribute.set(attributeByModel.get(model));
-                    if (attribute.get() == null) {
-                        throw new ServiceException("属性.xlsx不存在该型号：" + model);
-                    }
-                }
-                template.setApplicableBrand(attribute.get().getBrand());
-                template.setSkuHotModel(attribute.get().getHotAttribute());
+                template.setApplicableBrand(attribute.getBrand());
+                template.setSkuHotModel(attribute.getHotAttribute());
 
                 colorCategoryList.forEach(colorCategory -> {
 
@@ -284,7 +288,7 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
                     template.setColorCategory(colorCategory.getCategory());
 
                     String versions = modelByCode.get(model).getVersion();
-··                    // 多型号的自填尺码模式
+                    // 多型号的自填尺码模式
                     if (GenType.MULTI.getIndex().equals(genGoodsTemplateVO.getGenType())
                             && VersionType.MANUAL.getIndex().equals(genGoodsTemplateVO.getVersionType())) {
                         template.setColorCategory(versions + colorCategory.getCategory());
