@@ -333,7 +333,13 @@ public class GoodsTemplateServiceImpl implements GoodsTemplateService {
 
         // 型号关键词
         List<String> modelKeyword = modelList.stream()
-                .map(modelWordByCode::get)
+                .map(e -> {
+                    ModelWordVO modelWord = modelWordByCode.get(e);
+                    if (modelWord == null) {
+                        throw new ServiceException("型号词.xlsx不存在该型号：" + e);
+                    }
+                    return modelWord;
+                })
                 .map(ModelWordVO::getOtherKeyword)
                 .flatMap(List::stream)
                 .distinct()
