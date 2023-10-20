@@ -24,7 +24,7 @@ public class PathConstant {
     /**
      * 商品主图路径
      */
-    public static String MAIN_IMAGE_PATH = PATH;
+    public static String MAIN_IMAGE_PATH = PATH + "image/";
 
     /**
      * 上架文件名称
@@ -33,7 +33,7 @@ public class PathConstant {
     /**
      * 上架文件模板
      */
-    public static final String ON_SHELF_TEMPLATE_EXCEL_NAME = String.format(ON_SHELF_EXCEL_NAME, "模板");
+    public static final String ON_SHELF_TEMPLATE_EXCEL_NAME = String.format(ON_SHELF_EXCEL_NAME, "模板_简化");
 
     public static final String ATTRIBUTE_EXCEL_NAME = "属性.xlsx";
     public static final String COLOR_CATEGORY_EXCEL_NAME = "颜色分类.xlsx";

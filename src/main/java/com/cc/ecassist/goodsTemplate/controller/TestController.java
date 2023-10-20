@@ -4,6 +4,9 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.read.listener.ReadListener;
 import com.cc.ecassist.goodsTemplate.domain.ExportVO;
+import io.xjar.XKit;
+import io.xjar.boot.XBoot;
+import io.xjar.key.XKey;
 import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -33,6 +36,14 @@ import java.util.List;
 @RestController
 @RequestMapping("test")
 public class TestController {
+
+    public static void main(String[] args) throws Exception {
+        // Spring-Boot Jar包加密
+        String password = "simplify";
+        XKey xKey = XKit.key(password);
+        XBoot.encrypt("d:/ecassist-0.0.1-SNAPSHOT.jar", "d:/ecassist.jar", xKey);
+        System.out.println("Successfully generated encrypted jar");
+    }
 
     @GetMapping("hello")
     public String hello() {

@@ -42,28 +42,8 @@ public class GoodsTemplateController {
         return AjaxResult.success(result);
     }
 
-    @GetMapping("getTemplateList")
-    public AjaxResult getTemplateList(String excelName) {
-        return AjaxResult.success(goodsTemplateService.getTemplateList(excelName));
-    }
-
     @GetMapping("getModelList")
     public AjaxResult getModelList() {
         return AjaxResult.success(goodsTemplateService.getModelList());
-    }
-
-    @GetMapping("getKeywordList")
-    public AjaxResult getKeywordList() {
-        return AjaxResult.success(goodsTemplateService.getKeywordList());
-    }
-
-    @GetMapping("getModelData")
-    public AjaxResult getModelData() {
-        return AjaxResult.success(goodsTemplateService.getModelData());
-    }
-
-    @GetMapping("getKeywordData")
-    public AjaxResult getKeywordData() {
-        return AjaxResult.success(goodsTemplateService.getKeywordData());
     }
 }
